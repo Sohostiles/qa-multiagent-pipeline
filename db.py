@@ -1,7 +1,6 @@
 #  Database Setup 
 ## References:  https://sqlite.org/docs.html
 
-# db.py
 import sqlite3
 from config import DB_PATH
 
@@ -23,7 +22,7 @@ def init_db():
         )
     """)
 
-    # Store each page crawled
+    #Store each page crawled
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS pages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +33,7 @@ def init_db():
         )
     """)
 
-    # Store each finding from the Vision Agent
+    #Store each finding from the Vision Agent
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS findings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,8 +46,8 @@ def init_db():
             FOREIGN KEY (run_id) REFERENCES runs(id)
         )
     """)
-    
-    # Stores the final generated report 
+
+    #Store the final generated report 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -15,27 +15,27 @@ def run_pipeline(url, username, password):
     print(f"User: {username}")
     print(f"{'='*50}\n")
 
-    # Step 1: Initialise DB and create run record
+    #Step 1: Initialise DB and create run record
     db.init_db()
     run_id = db.create_run(url, username)
     print(f"Run ID: {run_id}\n")
 
-    # Step 2: Crawl
+    #Step 2: Crawl
     db.update_run_status(run_id, "crawling")
     pages = asyncio.run(crawl(url, username, password, run_id))
     db.save_pages(run_id, pages)
 
-    # Step 3: Vision analysis
+    #Step 3: Vision analysis
     db.update_run_status(run_id, "analysing")
     findings = analyse(pages)
     db.save_findings(run_id, findings)
 
-    # Step 4: Generate reports
+    #Step 4: Generate reports
     db.update_run_status(run_id, "reporting")
     report_content = generate_markdown(findings, run_id, username)
     html_path = generate_html(findings, report_content, run_id, username, pages)
 
-    # Step 5: Mark complete
+    #Step 5: Mark complete
     db.save_report(run_id, report_content)
     db.update_run_status(run_id, "completed")
 
@@ -55,7 +55,7 @@ def run_pipeline(url, username, password):
     }
 
 if __name__ == "__main__":
-    # Run 1: standard_user (baseline - should find few or no issues)
+    #Run 1: standard_user 
     print("RUN 1: standard_user (baseline)")
     result_standard = run_pipeline(
         url="https://www.saucedemo.com",
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         password="secret_sauce"
     )
 
-    # Run 2: problem_user (should find significantly more issues)
+    #Run 2: problem_user 
     print("RUN 2: problem_user (buggy user)")
     result_problem = run_pipeline(
         url="https://www.saucedemo.com",
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         password="secret_sauce"
     )
 
-    # Comparison summary
+    #Comparison summary
     standard_findings = result_standard["findings"]
     problem_findings = result_problem["findings"]
 
