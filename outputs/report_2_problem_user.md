@@ -1,49 +1,53 @@
 # QA Automated Test Report
 
 ## Summary
-The automated testing of the Saucedemo application, specifically focusing on the user role 'problem_user', revealed 15 issues across various pages. While no critical issues were found, there are several major and minor issues that need addressing to enhance user experience and functionality.
+The automated test run was conducted on the application https://www.saucedemo.com, specifically testing the experience for the 'problem_user' role. A total of 15 issues were identified: 0 critical, 4 major, and 11 minor. Key findings include concerns about visual, functional, and UX elements affecting user interaction and accessibility.
 
 ## Test Details
 - Target Application: https://www.saucedemo.com
 - User Role Tested: problem_user
-- Pages Analysed: Inventory Page, Inventory Item Page, Cart Page, Checkout Step One Page
+- Pages Analysed: Inventory, Inventory Item, Cart, Checkout Step One
 - Total Issues Found: 15
-- Critical: 0 | Major: 3 | Minor: 12
+- Critical: 0 | Major: 4 | Minor: 11
 
 ## Critical & Major Findings
 
-### MAJOR Issue: Duplicate Product Images
+### MAJOR Issue: Product Images Reusability
 - **Type:** visual
 - **Page:** https://www.saucedemo.com/inventory.html
-- **Description:** All product images are exactly the same, depicting a dog with a tennis ball, which is not relevant to the products listed.
-- **Recommended Fix:** Ensure each product has a unique and relevant image to appropriately represent the product offering.
+- **Description:** Same image is used for all products, which may confuse users.
+- **Recommended Fix:** Use different and relevant images for each product to help users distinguish between them.
 
-### MAJOR Issue: Non-functional 'Back to Products' Link
-- **Type:** functional
+### MAJOR Issue: Accessibility of Social Media Icons
+- **Type:** ux
 - **Page:** https://www.saucedemo.com/inventory-item.html?id=5
-- **Description:** The 'Back to products' link is present, but its functionality is not testable. It potentially does not navigate as expected.
-- **Recommended Fix:** Ensure the 'Back to products' link correctly navigates to the product listings page, providing a functional return option for users.
+- **Description:** Social media icons lack descriptive text for screen readers.
+- **Recommended Fix:** Add alt text for each social media icon to improve accessibility.
 
-### MAJOR Issue: Input Validation Feedback Missing
-- **Type:** functional
+### MAJOR Issue: Button Color Contrast
+- **Type:** visual
+- **Page:** https://www.saucedemo.com/cart.html
+- **Description:** The color contrast of the 'Remove' button against the white background may not meet accessibility standards.
+- **Recommended Fix:** Increase the contrast of the 'Remove' button text or background by choosing a bolder color.
+
+### MAJOR Issue: 'Cancel' Button Mislabeling
+- **Type:** ux
 - **Page:** https://www.saucedemo.com/checkout-step-one.html
-- **Description:** The continue button might not be operational if a user does not fill in required fields, due to missing input validation feedback.
-- **Recommended Fix:** Implement clear input validation and provide immediate feedback to users to guide them in correcting missing or incorrect information.
+- **Description:** The 'Cancel' button may be confused with a back navigation button due to the arrow icon.
+- **Recommended Fix:** Remove the arrow icon or provide a clearer indicator that this is a 'Cancel' action and not navigation.
 
 ## Minor Findings
-- Naming inconsistency with 'Test.allTheThings() T-Shirt (Red)' on inventory page.
-- Low contrast of footer text on inventory page.
-- Inconsistent spacing in product titles.
-- Incorrect future year in copyright notices.
-- Lack of hover feedback on 'Add to cart' buttons.
-- Function call-like format in product descriptions on the cart page.
-- Styling inconsistency between checkout and continue shopping buttons.
-- Small logo size reducing its visibility.
-- Low contrast of checkout input fields.
-- Proximity of 'Cancel' and 'Continue' buttons causing potential errors.
-- Unlabeled social media icons impacting accessibility.
+- Out-of-context product title on Inventory page.
+- Future-dated footer text on Inventory page.
+- Lack of visual separation for prices and buttons on Inventory page.
+- Subtle back navigation link on Inventory Item page.
+- Close alignment of text elements on Inventory Item page.
+- Header spacing issue on Inventory Item page.
+- Function call text in product description on Cart page.
+- Lack of bottom padding on Cart page.
+- Input fields visibility on Checkout Step One page.
+- Footer content misalignment on large screens on Checkout Step One page.
+- Lack of interaction feedback for the 'Continue' button on Checkout Step One page.
 
 ## Conclusion
-The current iteration of the Saucedemo application has several major issues concerning the visual and functional aspects, especially under the 'problem_user' role. Addressing these issues, particularly the major ones related to product images and navigation links, is essential to improve user experience and operational reliability. The minor issues predominantly involve UX improvements and accessibility enhancements which, when resolved, can significantly refine the overall interface and usability. 
-
-It is recommended to prioritize fixes for major issues followed by a comprehensive review and correction of the minor issues in line with best practices for web accessibility and user experience. Regular regression testing should be conducted post-fixes to ensure the stability of the application across different user roles and scenarios.
+Overall, the application displays functional strengths with opportunities for improvement in visual presentation and user experience, especially from an accessibility perspective. The primary focus should be on differentiating product images, enhancing accessibility features, improving visual contrast for interface elements, and clarifying navigation buttons. Addressing these issues will enhance the user interface and make it more intuitive and engaging for users. Immediate action on the major issues is recommended, followed by a systematic approach to resolving the minor issues to ensure a cohesive and user-friendly application experience.
