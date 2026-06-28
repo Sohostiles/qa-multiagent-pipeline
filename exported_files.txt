@@ -990,3 +990,558 @@
  "nbformat": 4,
  "nbformat_minor": 5
 }
+# The Orchestrator
+import asyncio
+from datetime import datetime
+
+import db
+from agents.crawl_agent import crawl
+from agents.vision_agent import analyse
+from agents.report_agent import generate_markdown
+from utils.html_report import generate_html
+
+def run_pipeline(url, username, password):
+    print(f"\n{'='*50}")
+    print(f"Pipeline starting")
+    print(f"Target: {url}")
+    print(f"User: {username}")
+    print(f"{'='*50}\n")
+
+    # Step 1: Initialise DB and create run record
+    db.init_db()
+    run_id = db.create_run(url, username)
+    print(f"Run ID: {run_id}\n")
+
+    # Step 2: Crawl
+    db.update_run_status(run_id, "crawling")
+    pages = asyncio.run(crawl(url, username, password, run_id))
+    db.save_pages(run_id, pages)
+
+    # Step 3: Vision analysis
+    db.update_run_status(run_id, "analysing")
+    findings = analyse(pages)
+    db.save_findings(run_id, findings)
+
+    # Step 4: Generate reports
+    db.update_run_status(run_id, "reporting")
+    report_content = generate_markdown(findings, run_id, username)
+    html_path = generate_html(findings, report_content, run_id, username, pages)
+
+    # Step 5: Mark complete
+    db.save_report(run_id, report_content)
+    db.update_run_status(run_id, "completed")
+
+    print(f"\n{'='*50}")
+    print(f"Pipeline complete")
+    print(f"Run ID: {run_id}")
+    print(f"Findings: {len(findings)}")
+    print(f"HTML report: {html_path}")
+    print(f"{'='*50}\n")
+
+    return {
+        "run_id": run_id,
+        "pages": pages,
+        "findings": findings,
+        "report": report_content,
+        "html_path": html_path
+    }
+
+if __name__ == "__main__":
+    # Run 1: standard_user (baseline - should find few or no issues)
+    print("RUN 1: standard_user (baseline)")
+    result_standard = run_pipeline(
+        url="https://www.saucedemo.com",
+        username="standard_user",
+        password="secret_sauce"
+    )
+
+    # Run 2: problem_user (should find significantly more issues)
+    print("RUN 2: problem_user (buggy user)")
+    result_problem = run_pipeline(
+        url="https://www.saucedemo.com",
+        username="problem_user",
+        password="secret_sauce"
+    )
+
+    # Comparison summary
+    standard_findings = result_standard["findings"]
+    problem_findings = result_problem["findings"]
+
+    print("\n" + "="*50)
+    print("COMPARISON SUMMARY")
+    print("="*50)
+    print(f"{'Metric':<30} {'standard_user':>15} {'problem_user':>15}")
+    print("-"*60)
+    print(f"{'Total findings':<30} {len(standard_findings):>15} {len(problem_findings):>15}")
+    print(f"{'Critical':<30} {len([f for f in standard_findings if f['severity']=='critical']):>15} {len([f for f in problem_findings if f['severity']=='critical']):>15}")
+    print(f"{'Major':<30} {len([f for f in standard_findings if f['severity']=='major']):>15} {len([f for f in problem_findings if f['severity']=='major']):>15}")
+    print(f"{'Minor':<30} {len([f for f in standard_findings if f['severity']=='minor']):>15} {len([f for f in problem_findings if f['severity']=='minor']):>15}")
+    print("="*50)#  Database Setup 
+## References:  https://sqlite.org/docs.html
+
+# db.py
+import sqlite3
+from config import DB_PATH
+
+def get_conn():
+    return sqlite3.connect(DB_PATH)
+
+def init_db():
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    # Store each pipeline run
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS runs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT NOT NULL,
+            username TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT
+        )
+    """)
+
+    # Store each page crawled
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS pages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id INTEGER,
+            url TEXT,
+            screenshot_path TEXT,
+            FOREIGN KEY (run_id) REFERENCES runs(id)
+        )
+    """)
+
+    # Store each finding from the Vision Agent
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS findings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id INTEGER,
+            page_url TEXT,
+            issue_type TEXT,
+            description TEXT,
+            severity TEXT,
+            recommended_fix TEXT,
+            FOREIGN KEY (run_id) REFERENCES runs(id)
+        )
+    """)
+    
+    # Stores the final generated report 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id INTEGER,
+            content TEXT,
+            created_at TEXT,
+            FOREIGN KEY (run_id) REFERENCES runs(id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+    print("Database initialised")
+
+def create_run(url, username):
+    from datetime import datetime
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO runs (url, username, status, created_at) VALUES (?, ?, ?, ?)",
+        (url, username, "pending", datetime.now().isoformat())
+    )
+    run_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return run_id
+
+def update_run_status(run_id, status):
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE runs SET status = ? WHERE id = ?",
+        (status, run_id)
+    )
+    conn.commit()
+    conn.close()
+
+def save_pages(run_id, pages):
+    conn = get_conn()
+    cursor = conn.cursor()
+    for page in pages:
+        cursor.execute(
+            "INSERT INTO pages (run_id, url, screenshot_path) VALUES (?, ?, ?)",
+            (run_id, page["url"], page["screenshot"])
+        )
+    conn.commit()
+    conn.close()
+
+def save_findings(run_id, findings):
+    conn = get_conn()
+    cursor = conn.cursor()
+    for f in findings:
+        cursor.execute(
+            """INSERT INTO findings
+               (run_id, page_url, issue_type, description, severity, recommended_fix)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (run_id, f["page_url"], f["issue_type"], f["description"],
+             f["severity"], f.get("recommended_fix", ""))
+        )
+    conn.commit()
+    conn.close()
+
+def save_report(run_id, content):
+    from datetime import datetime
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO reports (run_id, content, created_at) VALUES (?, ?, ?)",
+        (run_id, content, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()# Imports & Config
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+from openai import OpenAI
+
+# Load .env file
+load_dotenv()
+
+# API
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# Paths
+BASE_DIR = Path(__file__).parent
+SCREENSHOTS_DIR = BASE_DIR / "screenshots"
+OUTPUTS_DIR = BASE_DIR / "outputs"
+DB_PATH = BASE_DIR / "qa_pipeline.db"
+
+# Create directories if they don't exist
+SCREENSHOTS_DIR.mkdir(exist_ok=True)
+OUTPUTS_DIR.mkdir(exist_ok=True)
+
+# Model
+MODEL = "gpt-4o"# Crawl Agent
+
+import asyncio
+from playwright.async_api import async_playwright
+from config import SCREENSHOTS_DIR
+
+async def crawl(url, username, password, run_id):
+    print(f"Crawl Agent starting for {url} as '{username}'...")
+    pages_crawled = []
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False)
+        page = await browser.new_page()
+
+        # Login
+        await page.goto(url)
+        await page.fill("#user-name", username)
+        await page.fill("#password", password)
+        await page.click("#login-button")
+        await page.wait_for_load_state("networkidle")
+        print(f"  Logged in as {username}")
+
+        # Inventory page
+        screenshot_path = str(SCREENSHOTS_DIR / f"{run_id}_inventory.png")
+        await page.screenshot(path=screenshot_path, full_page=True)
+        pages_crawled.append({"url": page.url, "screenshot": screenshot_path})
+        print(f"  Captured inventory page")
+
+        # Product detail page
+        await page.click(".inventory_item_name >> nth=0")
+        await page.wait_for_load_state("networkidle")
+        screenshot_path = str(SCREENSHOTS_DIR / f"{run_id}_product.png")
+        await page.screenshot(path=screenshot_path, full_page=True)
+        pages_crawled.append({"url": page.url, "screenshot": screenshot_path})
+        print(f"  Captured product page")
+
+        # Cart page
+        await page.go_back()
+        await page.wait_for_load_state("networkidle")
+        await page.click(".btn_inventory >> nth=0")
+        await page.click(".shopping_cart_link")
+        await page.wait_for_load_state("networkidle")
+        screenshot_path = str(SCREENSHOTS_DIR / f"{run_id}_cart.png")
+        await page.screenshot(path=screenshot_path, full_page=True)
+        pages_crawled.append({"url": page.url, "screenshot": screenshot_path})
+        print(f"  Captured cart page")
+
+        # Checkout page
+        await page.click("#checkout")
+        await page.wait_for_load_state("networkidle")
+        screenshot_path = str(SCREENSHOTS_DIR / f"{run_id}_checkout.png")
+        await page.screenshot(path=screenshot_path, full_page=True)
+        pages_crawled.append({"url": page.url, "screenshot": screenshot_path})
+        print(f"  Captured checkout page")
+
+        await browser.close()
+
+    print(f"Crawl Agent complete — {len(pages_crawled)} pages captured")
+    return pages_crawled# Report Agent 
+
+from datetime import datetime
+from config import client, MODEL, OUTPUTS_DIR
+
+def generate_markdown(findings, run_id, username):
+    print("Report Agent generating markdown report...")
+
+    critical = [f for f in findings if f["severity"] == "critical"]
+    major = [f for f in findings if f["severity"] == "major"]
+    minor = [f for f in findings if f["severity"] == "minor"]
+
+    findings_text = ""
+    for f in findings:
+        findings_text += f"""
+- [{f['severity'].upper()}] {f['issue_type'].upper()} on {f['page_url']}
+  Description: {f['description']}
+  Location: {f.get('location', 'Not specified')}
+  Recommended Fix: {f.get('recommended_fix', 'Not specified')}
+"""
+
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": """You are a senior QA engineer writing a formal bug report. 
+                                Generate a clear, structured incident report from the provided findings.
+
+                                Use this exact structure:
+
+                                # QA Automated Test Report
+
+                                ## Summary
+                                Brief overview of the test run and key findings.
+
+                                ## Test Details
+                                - Target Application: 
+                                - User Role Tested:
+                                - Pages Analysed:
+                                - Total Issues Found:
+                                - Critical: X | Major: X | Minor: X
+
+                                ## Critical & Major Findings
+                                For each critical/major issue, include:
+                                ### [SEVERITY] Issue Title
+                                - **Type:** visual/functional/ux
+                                - **Page:** url
+                                - **Description:** full description
+                                - **Recommended Fix:** your suggestion
+
+                                ## Minor Findings
+                                Brief list of minor issues.
+
+                                ## Conclusion
+                                Overall assessment and recommended next steps.
+
+                                Be professional, specific and actionable."""
+                                            },
+                                            {
+                                                "role": "user",
+                                                "content": f"""Generate a QA report for the following test run:
+
+                                Target: https://www.saucedemo.com
+                                User Role: {username}
+                                Total Findings: {len(findings)} ({len(critical)} critical, {len(major)} major, {len(minor)} minor)
+
+                                Findings:
+                                {findings_text}"""
+                                            }
+                                        ],
+                                        max_tokens=2000
+                                    )
+
+    report_content = response.choices[0].message.content.strip()
+
+    report_path = OUTPUTS_DIR / f"report_{run_id}_{username}.md"
+    with open(report_path, "w", encoding="utf-8") as file:
+        file.write(report_content)
+
+    print(f"Markdown report saved to {report_path}")
+    return report_content# Vsision Agent 
+
+import base64
+import json
+from config import client, MODEL
+
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+def analyse(pages):
+    print("Vision Agent starting analysis...")
+    all_findings = []
+
+    for page in pages:
+        print(f"  Analysing: {page['url']}")
+        image_data = encode_image(page["screenshot"])
+
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": """You are an expert QA engineer specialising in UI/UX 
+                                and functional testing. Analyse the provided screenshot of a web 
+                                application and identify any defects, issues, or areas of concern.
+
+                                For each issue found, respond in this exact JSON format:
+                                {
+                                    "findings": [
+                                        {
+                                            "issue_type": "visual|functional|ux",
+                                            "description": "Clear description of the issue",
+                                            "severity": "critical|major|minor",
+                                            "location": "Where on the page the issue is",
+                                            "recommended_fix": "Specific actionable fix for this issue"
+                                        }
+                                    ]
+                                }
+
+                                Be specific and thorough. Look for:
+                                - Broken or incorrect images
+                                - Layout issues or misaligned elements  
+                                - Missing or incorrect text
+                                - Broken buttons or interactive elements
+                                - Poor colour contrast or accessibility issues
+                                - Confusing or misleading UI elements
+                                - Form validation issues
+
+                                Respond ONLY with the JSON, no extra text."""
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": f"Please analyse this screenshot from the page: {page['url']}"
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{image_data}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens=1000
+        )
+
+        raw = response.choices[0].message.content.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+
+        result = json.loads(raw)
+        findings = result.get("findings", [])
+
+        print(f"  Found {len(findings)} issue(s)")
+        for f in findings:
+            f["page_url"] = page["url"]
+            all_findings.append(f)
+
+    print(f"Vision Agent complete — {len(all_findings)} total findings")
+    return all_findings# Generation of the HTML report 
+
+import base64
+from datetime import datetime
+from config import OUTPUTS_DIR
+
+def encode_image(image_path):
+    with open(image_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+def generate_html(findings, report_content, run_id, username, pages):
+    print("Generating HTML report...")
+
+    critical = [f for f in findings if f["severity"] == "critical"]
+    major = [f for f in findings if f["severity"] == "major"]
+    minor = [f for f in findings if f["severity"] == "minor"]
+
+    encoded_screenshots = {}
+    for page in pages:
+        try:
+            encoded_screenshots[page["url"]] = encode_image(page["screenshot"])
+        except Exception as e:
+            print(f"  Could not encode screenshot for {page['url']}: {e}")
+
+    def build_section(group, color, label):
+        if not group:
+            return f"<h2>{label}</h2><p><em>None found.</em></p>"
+
+        cards = ""
+        last_page_url = None
+        for f in group:
+            page_url = f["page_url"]
+            screenshot_html = ""
+            if page_url != last_page_url and page_url in encoded_screenshots:
+                img_data = encoded_screenshots[page_url]
+                screenshot_html = f"""
+                <p><strong>Page:</strong> <code>{page_url}</code></p>
+                <img src="data:image/png;base64,{img_data}"
+                     alt="Screenshot of {page_url}"
+                     style="width:100%; border:1px solid #ccc; margin: 8px 0 16px 0;"/>
+                """
+                last_page_url = page_url
+
+            cards += f"""
+            {screenshot_html}
+            <div style="border-left: 3px solid {color}; padding: 10px 14px; margin-bottom: 12px; background: #fafafa;">
+                <p><strong>[{f['severity'].upper()}]</strong> {f['issue_type'].upper()} — {f['description']}</p>
+                <p><small><strong>Location:</strong> {f.get('location', 'Not specified')}</small></p>
+                <p><small><strong>Recommended Fix:</strong> {f.get('recommended_fix', 'Not specified')}</small></p>
+            </div>
+            """
+        return f"<h2>{label} ({len(group)})</h2>{cards}"
+
+    critical_html = build_section(critical, "#cc0000", "Critical Findings")
+    major_html = build_section(major, "#cc6600", "Major Findings")
+    minor_html = build_section(minor, "#997700", "Minor Findings")
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QA Report - {username}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; color: #222; }}
+        h1 {{ border-bottom: 2px solid #222; padding-bottom: 10px; }}
+        h2 {{ margin-top: 40px; border-bottom: 1px solid #ccc; padding-bottom: 6px; }}
+        table {{ border-collapse: collapse; margin-bottom: 30px; }}
+        td, th {{ padding: 6px 14px; border: 1px solid #ccc; font-size: 0.9em; }}
+        code {{ background: #f0f0f0; padding: 2px 5px; font-size: 0.85em; }}
+        .footer {{ margin-top: 60px; font-size: 0.8em; color: #999; border-top: 1px solid #eee; padding-top: 10px; }}
+    </style>
+</head>
+<body>
+    <h1>QA Automated Test Report</h1>
+    <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | User Role: {username}</p>
+
+    <h2>Test Details</h2>
+    <table>
+        <tr><th>Target Application</th><td>https://www.saucedemo.com</td></tr>
+        <tr><th>User Role Tested</th><td>{username}</td></tr>
+        <tr><th>Pages Analysed</th><td>{len(set(f['page_url'] for f in findings))}</td></tr>
+        <tr><th>Total Issues</th><td>{len(findings)} ({len(critical)} critical, {len(major)} major, {len(minor)} minor)</td></tr>
+        <tr><th>Run ID</th><td>{run_id}</td></tr>
+    </table>
+
+    {critical_html}
+    {major_html}
+    {minor_html}
+
+    <div class="footer">Generated by QA Multi-Agent Pipeline | CM3070 Final Project</div>
+</body>
+</html>"""
+
+    html_path = OUTPUTS_DIR / f"report_{run_id}_{username}.html"
+    with open(html_path, "w", encoding="utf-8") as file:
+        file.write(html)
+
+    print(f"HTML report saved to {html_path}")
+    return html_path

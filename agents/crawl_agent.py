@@ -1,6 +1,5 @@
 # Crawl Agent
 
-# agents/crawl_agent.py
 import asyncio
 from playwright.async_api import async_playwright
 from config import SCREENSHOTS_DIR

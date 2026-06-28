@@ -1,6 +1,5 @@
 # Report Agent 
 
-# agents/report_agent.py
 from datetime import datetime
 from config import client, MODEL, OUTPUTS_DIR
 
@@ -26,52 +25,52 @@ def generate_markdown(findings, run_id, username):
             {
                 "role": "system",
                 "content": """You are a senior QA engineer writing a formal bug report. 
-Generate a clear, structured incident report from the provided findings.
+                                Generate a clear, structured incident report from the provided findings.
 
-Use this exact structure:
+                                Use this exact structure:
 
-# QA Automated Test Report
+                                # QA Automated Test Report
 
-## Summary
-Brief overview of the test run and key findings.
+                                ## Summary
+                                Brief overview of the test run and key findings.
 
-## Test Details
-- Target Application: 
-- User Role Tested:
-- Pages Analysed:
-- Total Issues Found:
-- Critical: X | Major: X | Minor: X
+                                ## Test Details
+                                - Target Application: 
+                                - User Role Tested:
+                                - Pages Analysed:
+                                - Total Issues Found:
+                                - Critical: X | Major: X | Minor: X
 
-## Critical & Major Findings
-For each critical/major issue, include:
-### [SEVERITY] Issue Title
-- **Type:** visual/functional/ux
-- **Page:** url
-- **Description:** full description
-- **Recommended Fix:** your suggestion
+                                ## Critical & Major Findings
+                                For each critical/major issue, include:
+                                ### [SEVERITY] Issue Title
+                                - **Type:** visual/functional/ux
+                                - **Page:** url
+                                - **Description:** full description
+                                - **Recommended Fix:** your suggestion
 
-## Minor Findings
-Brief list of minor issues.
+                                ## Minor Findings
+                                Brief list of minor issues.
 
-## Conclusion
-Overall assessment and recommended next steps.
+                                ## Conclusion
+                                Overall assessment and recommended next steps.
 
-Be professional, specific and actionable."""
-            },
-            {
-                "role": "user",
-                "content": f"""Generate a QA report for the following test run:
+                                Be professional, specific and actionable."""
+                                            },
+                                            {
+                                                "role": "user",
+                                                "content": f"""Generate a QA report for the following test run:
 
-Target: https://www.saucedemo.com
-User Role: {username}
-Total Findings: {len(findings)} ({len(critical)} critical, {len(major)} major, {len(minor)} minor)
+                                Target: https://www.saucedemo.com
+                                User Role: {username}
+                                Total Findings: {len(findings)} ({len(critical)} critical, {len(major)} major, {len(minor)} minor)
 
-Findings:
-{findings_text}"""
-            }
-        ],
-        max_tokens=2000
-    )
+                                Findings:
+                                {findings_text}"""
+                                            }
+                                        ],
+                                        max_tokens=2000
+                                    )
 
     report_content = response.choices[0].message.content.strip()
 
