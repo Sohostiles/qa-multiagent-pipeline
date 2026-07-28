@@ -8,6 +8,17 @@ from agents.vision_agent import analyse
 from agents.report_agent import generate_markdown
 from utils.html_report import generate_html
 
+# SauceDemo login, expressed as a generic login_config for the crawler
+# For a different site, swap this dict (or pass login_config=None to skip login).
+SAUCEDEMO_LOGIN = {
+    "url": "https://www.saucedemo.com",
+    "username": "standard_user",
+    "password": "secret_sauce",
+    "username_selector": "#user-name",
+    "password_selector": "#password",
+    "submit_selector": "#login-button",
+}
+
 def run_pipeline(url, username, password):
     print(f"\n{'='*50}")
     print(f"Pipeline starting")
@@ -22,7 +33,9 @@ def run_pipeline(url, username, password):
 
     #Step 2: Crawl
     db.update_run_status(run_id, "crawling")
-    pages = asyncio.run(crawl(url, username, password, run_id))
+    SAUCEDEMO_SEEDS = ["/cart.html", "/checkout-step-one.html"]
+    pages = asyncio.run(crawl(url, run_id, login_config=login_config,
+                              seed_paths=SAUCEDEMO_SEEDS))
     db.save_pages(run_id, pages)
 
     #Step 3: Vision analysis

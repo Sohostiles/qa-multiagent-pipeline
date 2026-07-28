@@ -14,6 +14,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 #Paths
 BASE_DIR = Path(__file__).parent
 SCREENSHOTS_DIR = BASE_DIR / "screenshots"
+DOM_DIR = BASE_DIR / "dom"
 OUTPUTS_DIR = BASE_DIR / "outputs"
 DB_PATH = BASE_DIR / "qa_pipeline.db"
 
