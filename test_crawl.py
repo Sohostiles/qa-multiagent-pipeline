@@ -1,14 +1,12 @@
-# test_crawl.py — run ONLY the Crawl Agent, in isolation.
-# Usage:  python test_crawl.py
-#
-# This does not touch the database, the Vision/Reason agents, or reports.
-# It just runs the crawler and prints what it captured, so you can confirm
-# the generic crawler discovers pages correctly before wiring it deeper.
+# test_crawl.py
+# Run only the Crawl Agent, in isolation
+# Does not touch the database, other agents, or reports
+# Runs the crawler and prints what it captured
 
 import asyncio
 from agents.crawl_agent import crawl
 
-# SauceDemo login as a generic login_config (same shape the orchestrator uses).
+# SauceDemo login, same shape the orchestrator uses
 SAUCEDEMO_LOGIN = {
     "url": "https://www.saucedemo.com",
     "username": "standard_user",
@@ -19,7 +17,7 @@ SAUCEDEMO_LOGIN = {
 }
 
 if __name__ == "__main__":
-    # run_id is just a label for the screenshot/DOM filenames here.
+    # run_id is just a label for the screenshot and DOM filenames
     run_id = 999
 
     pages = asyncio.run(
@@ -34,7 +32,7 @@ if __name__ == "__main__":
     )
 
     print("\n" + "=" * 50)
-    print(f"CRAWL TEST RESULT — {len(pages)} pages captured")
+    print(f"CRAWL TEST RESULT, {len(pages)} pages captured")
     print("=" * 50)
     for i, p in enumerate(pages, 1):
         dom_len = len(p.get("dom", ""))

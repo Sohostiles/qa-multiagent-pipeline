@@ -1,7 +1,7 @@
-# test_decide.py — watch the LLM drive a real page, step by step.
-# It manually runs the loop: get elements -> LLM decides -> execute -> repeat.
-# This verifies decide_next_action() BEFORE assembling the full run_scenario loop.
-
+# test_decide.py
+# Watch the LLM drive a real page, step by step
+# Manually runs the loop, get elements, LLM decides, execute, repeat
+# Verifies decide_next_action before assembling the full run_scenario loop
 
 import asyncio
 from playwright.async_api import async_playwright
@@ -28,7 +28,7 @@ async def main():
         browser = await p.chromium.launch(headless=False)
         page = await browser.new_page()
 
-        # Set up: log in, add an item, land on the checkout form.
+        # Set up, log in, add an item, land on the checkout form
         await _login(page, SAUCEDEMO_LOGIN)
         await page.goto("https://www.saucedemo.com/inventory.html")
         await page.click("[data-test='add-to-cart-sauce-labs-backpack']")
@@ -52,7 +52,7 @@ async def main():
             ok, msg = await _execute(page, decision)
             print(f"  RESULT:   {'OK ' if ok else 'ERR'} {msg}\n")
 
-            # Record what happened so the next decision has context.
+            # Record what happened so the next decision has context
             history.append({
                 "action": decision.get("action"),
                 "selector": decision.get("selector"),
