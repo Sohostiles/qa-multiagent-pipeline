@@ -318,6 +318,8 @@ async def run_scenario(page, run_id, base_name, max_steps=12):
             capture = await _capture(page, run_id, f"{base_name}_step{step+1}")
             capture["interaction"] = True
             capture["step"] = step + 1
+            capture["action"] = f"{decision.get('action')} {decision.get('selector','')} {decision.get('value','')}".strip()
+            capture["action_reason"] = decision.get("reason", "")
             captured_pages.append(capture)
             last_dom = new_dom
         else:
