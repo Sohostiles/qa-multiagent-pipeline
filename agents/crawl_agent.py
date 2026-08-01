@@ -363,6 +363,7 @@ async def crawl(url, run_id, login_config=None, seed_paths=None,
 
     print(f"Crawl Agent starting for {url}...")
     pages_crawled = []
+    all_traces = []
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
@@ -414,7 +415,12 @@ async def crawl(url, run_id, login_config=None, seed_paths=None,
                 print(f"    [scenario] interactive page detected: {current_url}")
                 scenario_pages, scenario_trace = await run_scenario(page, run_id, name)
                 pages_crawled.extend(scenario_pages)
-                # scenario_trace will be stored in a later step
+
+                # Attach page and step context, then collect for storage
+                for i, t in enumerate(scenario_trace, 1):
+                    t["page_url"] = current_url
+                    t["step"] = i
+                    all_traces.append(t)
 
                 # A scenario moves the browser around, return to the crawl page
                 if page.url != current_url:
@@ -434,5 +440,6 @@ async def crawl(url, run_id, login_config=None, seed_paths=None,
 
         await browser.close()
 
-    print(f"Crawl Agent complete, {len(pages_crawled)} pages captured")
-    return pages_crawled
+    print(f"Crawl Agent complete, {len(pages_crawled)} pages captured, "
+          f"{len(all_traces)} trace steps")
+    return pages_crawled, all_traces

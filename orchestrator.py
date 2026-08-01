@@ -4,7 +4,8 @@ from datetime import datetime
 
 import db
 from agents.crawl_agent import crawl
-from agents.vision_agent import analyse
+from agents.vision_agent import analyse as vision_analyse
+from agents.reason_agent import analyse as reason_analyse, analyse_transitions
 from agents.report_agent import generate_markdown
 from utils.html_report import generate_html
 
@@ -19,43 +20,57 @@ SAUCEDEMO_LOGIN = {
     "submit_selector": "#login-button",
 }
 
-def run_pipeline(url, username, password):
+def run_pipeline(url, login_config):
+    username = login_config.get("username", "anonymous") if login_config else "anonymous"
+
     print(f"\n{'='*50}")
     print(f"Pipeline starting")
     print(f"Target: {url}")
     print(f"User: {username}")
     print(f"{'='*50}\n")
 
-    #Step 1: Initialise DB and create run record
+    # Step 1, init DB and create run record
     db.init_db()
     run_id = db.create_run(url, username)
     print(f"Run ID: {run_id}\n")
 
-    #Step 2: Crawl
+    # Step 2, crawl
     db.update_run_status(run_id, "crawling")
-    SAUCEDEMO_SEEDS = ["/cart.html", "/checkout-step-one.html"]
-    pages = asyncio.run(crawl(url, run_id, login_config=login_config,
-                              seed_paths=SAUCEDEMO_SEEDS))
+    seed_paths = ["/cart.html", "/checkout-step-one.html"]
+    pages, traces = asyncio.run(crawl(url, run_id,
+                                      login_config=login_config,
+                                      seed_paths=seed_paths))
     db.save_pages(run_id, pages)
+    db.save_traces(run_id, traces)
 
-    #Step 3: Vision analysis
+    # Step 3, analysis, Vision plus Reason per state plus Reason transitions
     db.update_run_status(run_id, "analysing")
-    findings = analyse(pages)
+
+    vision_findings = vision_analyse(pages)
+    for f in vision_findings:
+        f["source"] = "vision"
+
+    reason_findings = reason_analyse(pages)          # tagged source=reason
+    transition_findings = analyse_transitions(pages) # tagged source=reason_transition
+
+    findings = vision_findings + reason_findings + transition_findings
     db.save_findings(run_id, findings)
 
-    #Step 4: Generate reports
+    # Step 4, generate reports
     db.update_run_status(run_id, "reporting")
     report_content = generate_markdown(findings, run_id, username)
     html_path = generate_html(findings, report_content, run_id, username, pages)
 
-    #Step 5: Mark complete
+    # Step 5, mark complete
     db.save_report(run_id, report_content)
     db.update_run_status(run_id, "completed")
 
     print(f"\n{'='*50}")
     print(f"Pipeline complete")
     print(f"Run ID: {run_id}")
-    print(f"Findings: {len(findings)}")
+    print(f"Findings: {len(findings)} "
+          f"(vision {len(vision_findings)}, reason {len(reason_findings)}, "
+          f"transition {len(transition_findings)})")
     print(f"HTML report: {html_path}")
     print(f"{'='*50}\n")
 
@@ -64,37 +79,5 @@ def run_pipeline(url, username, password):
         "pages": pages,
         "findings": findings,
         "report": report_content,
-        "html_path": html_path
+        "html_path": html_path,
     }
-
-if __name__ == "__main__":
-    #Run 1: standard_user 
-    print("RUN 1: standard_user (baseline)")
-    result_standard = run_pipeline(
-        url="https://www.saucedemo.com",
-        username="standard_user",
-        password="secret_sauce"
-    )
-
-    #Run 2: problem_user 
-    print("RUN 2: problem_user (buggy user)")
-    result_problem = run_pipeline(
-        url="https://www.saucedemo.com",
-        username="problem_user",
-        password="secret_sauce"
-    )
-
-    #Comparison summary
-    standard_findings = result_standard["findings"]
-    problem_findings = result_problem["findings"]
-
-    print("\n" + "="*50)
-    print("COMPARISON SUMMARY")
-    print("="*50)
-    print(f"{'Metric':<30} {'standard_user':>15} {'problem_user':>15}")
-    print("-"*60)
-    print(f"{'Total findings':<30} {len(standard_findings):>15} {len(problem_findings):>15}")
-    print(f"{'Critical':<30} {len([f for f in standard_findings if f['severity']=='critical']):>15} {len([f for f in problem_findings if f['severity']=='critical']):>15}")
-    print(f"{'Major':<30} {len([f for f in standard_findings if f['severity']=='major']):>15} {len([f for f in problem_findings if f['severity']=='major']):>15}")
-    print(f"{'Minor':<30} {len([f for f in standard_findings if f['severity']=='minor']):>15} {len([f for f in problem_findings if f['severity']=='minor']):>15}")
-    print("="*50)

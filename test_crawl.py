@@ -20,7 +20,7 @@ if __name__ == "__main__":
     # run_id is just a label for the screenshot and DOM filenames
     run_id = 999
 
-    pages = asyncio.run(
+    pages, traces = asyncio.run(
         crawl(
             url="https://www.saucedemo.com",
             run_id=run_id,
