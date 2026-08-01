@@ -20,6 +20,7 @@ DB_PATH = BASE_DIR / "qa_pipeline.db"
 
 #Create directories if they don't exist
 SCREENSHOTS_DIR.mkdir(exist_ok=True)
+DOM_DIR.mkdir(exist_ok=True)
 OUTPUTS_DIR.mkdir(exist_ok=True)
 
 #Model

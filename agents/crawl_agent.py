@@ -320,6 +320,7 @@ async def run_scenario(page, run_id, base_name, max_steps=12):
             capture["step"] = step + 1
             capture["action"] = f"{decision.get('action')} {decision.get('selector','')} {decision.get('value','')}".strip()
             capture["action_reason"] = decision.get("reason", "")
+            capture["dom_before"] = last_dom   # the DOM as it was before this action
             captured_pages.append(capture)
             last_dom = new_dom
         else:

@@ -6,9 +6,7 @@
 import asyncio
 from agents.vision_agent import analyse
 
-# Pick a few saved states to check
-# One normal page and one interaction state (e.g. the validation error)
-# Update these paths to match files you actually have in screenshots/ and dom/
+# One normal page and one interaction state
 PAGES = [
     {
         "url": "https://www.saucedemo.com/inventory.html",
