@@ -3,7 +3,7 @@
 import re
 
 import json
-from config import client, MODEL
+from config import client, MODEL, chat_with_retry
 
 # Trim a raw DOM to structure and text, strip scripts and styles, cap length
 # Keep error and message regions even if they sit deep in the DOM
@@ -43,28 +43,39 @@ def _trim_dom(dom, max_chars=8000):
         return head + " ... ERROR REGIONS: " + error_text
     return head
 
+# Reduce a DOM to a structural fingerprint for dedup
+# Strips digits and whitespace so states that differ only in counts or
+# data values collapse to the same fingerprint
+def _fingerprint(dom):
+    dom = re.sub(r"\d+", "", dom or "")   # remove numbers like cart counts
+    dom = re.sub(r"\s+", "", dom)          # remove whitespace
+    return dom
+
 def analyse(pages):
     print("Reason Agent starting analysis...")
     all_findings = []
+    seen = set()
 
     for page in pages:
-        print(f"  Analysing: {page['url']}")
         dom = _trim_dom(page.get("dom", ""))
         if not dom:
             print(f"  No DOM for {page['url']}, skipping")
             continue
 
-        # Extra context for interaction states 
+        # Interaction states are handled by transition analysis, skip them here
         if page.get("interaction"):
-            interaction_note = (
-                f"\nThis state resulted from an interaction: {page.get('action','')}."
-                f" Intent: {page.get('action_reason','')}."
-                f" Judge whether the functional response to this action is correct."
-            )
-        else:
-            interaction_note = ""
+            continue
 
-        response = client.chat.completions.create(
+        # Skip near-duplicate states already analysed this run
+        fp = _fingerprint(dom)
+        if fp in seen:
+            print(f"  Skipping near-duplicate: {page['url']}")
+            continue
+        seen.add(fp)
+
+        print(f"  Analysing: {page['url']}")
+
+        response = chat_with_retry(
             model=MODEL,
             messages=[
                 {
@@ -108,7 +119,6 @@ def analyse(pages):
                 {
                     "role": "user",
                     "content": f"""Analyse the DOM of this page: {page['url']}
-{interaction_note}
 
 DOM:
 {dom}"""
@@ -147,16 +157,25 @@ def analyse_transitions(pages):
     print("Reason Agent starting transition analysis...")
     all_findings = []
 
+    seen = set()
     for page in pages:
         # Only interaction states with a recorded before state qualify
         if not page.get("interaction") or not page.get("dom_before"):
             continue
 
-        print(f"  Comparing before and after: {page['url']} ({page.get('action','')})")
         before = _trim_dom(page.get("dom_before", ""))
         after = _trim_dom(page.get("dom", ""))
 
-        response = client.chat.completions.create(
+        # Skip near-duplicate transitions (same before and after fingerprint)
+        fp = _fingerprint(before) + "|" + _fingerprint(after)
+        if fp in seen:
+            print(f"  Skipping near-duplicate transition: {page['url']}")
+            continue
+        seen.add(fp)
+
+        print(f"  Comparing before and after: {page['url']} ({page.get('action','')})")
+
+        response = chat_with_retry(
             model=MODEL,
             messages=[
                 {

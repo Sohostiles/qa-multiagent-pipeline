@@ -1,6 +1,5 @@
 # The Orchestrator
 import asyncio
-from datetime import datetime
 
 import db
 from agents.crawl_agent import crawl
@@ -10,7 +9,7 @@ from agents.report_agent import generate_markdown
 from utils.html_report import generate_html
 
 # SauceDemo login, expressed as a generic login_config for the crawler
-# For a different site, swap this dict (or pass login_config=None to skip login).
+# For a different site, swap this dict or pass login_config=None to skip login
 SAUCEDEMO_LOGIN = {
     "url": "https://www.saucedemo.com",
     "username": "standard_user",
@@ -81,3 +80,11 @@ def run_pipeline(url, login_config):
         "report": report_content,
         "html_path": html_path,
     }
+
+
+if __name__ == "__main__":
+    # First full run, clean baseline user
+    result = run_pipeline(
+        url="https://www.saucedemo.com",
+        login_config=SAUCEDEMO_LOGIN,
+    )

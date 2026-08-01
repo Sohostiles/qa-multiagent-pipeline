@@ -7,7 +7,7 @@ import json
 import asyncio
 import re
 from playwright.async_api import async_playwright
-from config import SCREENSHOTS_DIR, DOM_DIR, client, MODEL
+from config import SCREENSHOTS_DIR, DOM_DIR, client, MODEL, chat_with_retry
 from urllib.parse import urlparse, urljoin
 
 # Buttons whose text matches these are never clicked
@@ -266,7 +266,7 @@ Actions so far:
 
 What is the single next action?"""
 
-    response = client.chat.completions.create(
+    response = chat_with_retry(
         model=MODEL,
         messages=[{"role": "system", "content": system},
                   {"role": "user", "content": user}],

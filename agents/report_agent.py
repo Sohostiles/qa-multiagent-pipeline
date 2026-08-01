@@ -1,7 +1,7 @@
 # Report Agent 
 
 from datetime import datetime
-from config import client, MODEL, OUTPUTS_DIR
+from config import chat_with_retry, client, MODEL, OUTPUTS_DIR
 
 def generate_markdown(findings, run_id, username):
     print("Report Agent generating markdown report...")
@@ -19,7 +19,7 @@ def generate_markdown(findings, run_id, username):
   Recommended Fix: {f.get('recommended_fix', 'Not specified')}
 """
 
-    response = client.chat.completions.create(
+    response = chat_with_retry(
         model=MODEL,
         messages=[
             {

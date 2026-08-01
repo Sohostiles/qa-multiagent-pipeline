@@ -4,7 +4,7 @@ import re
 
 import base64
 import json
-from config import client, MODEL
+from config import chat_with_retry, client, MODEL
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -42,7 +42,7 @@ def analyse(pages):
         else:
             interaction_note = ""
 
-        response = client.chat.completions.create(
+        response = chat_with_retry(
             model=MODEL,
             messages=[
                 {
