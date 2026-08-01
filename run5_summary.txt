@@ -1,0 +1,203 @@
+============================================================
+RUN 5 SUMMARY
+============================================================
+Target:   https://www.saucedemo.com
+User:     standard_user
+Status:   reporting
+Created:  2026-08-01T22:11:29.237113
+
+Pages captured: 23 (20 interaction, 3 passive)
+Total findings: 34
+
+Findings by source:
+  reason               9
+  reason_transition    4
+  vision               21
+
+Findings by severity:
+  critical             2
+  major                15
+  minor                17
+
+Findings by issue type:
+  accessibility        7
+  functional           6
+  ux                   6
+  visual               15
+
+============================================================
+ALL FINDINGS
+============================================================
+
+[1] critical / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The shopping cart link is present but does not contain any accessible name or text, making it inaccessible to screen readers.
+    fix:  Add an aria-label or inner text to provide an accessible name for the element.
+
+[2] critical / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: No error message is displayed when submitting empty form fields.
+    fix:  Display an appropriate error message in the '.error-message-container' when form fields are submitted empty.
+
+[3] major / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Anchor elements for 'All Items', 'Logout', and 'Reset App State' in the sidebar contain href='#', which leads nowhere.
+    fix:  Use appropriate URLs or JavaScript event listeners to ensure they perform meaningful actions.
+
+[4] major / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The menu button and close menu button are missing aria-expanded attributes to indicate their states as being expanded or collapsed.
+    fix:  Add aria-expanded attributes which dynamically update based on the state of the menu.
+
+[5] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/cart.html
+    desc: Menu items in the sidebar have a '#' link, which leads nowhere.
+    fix:  Provide valid URLs for the 'inventory_sidebar_link', 'logout_sidebar_link', and 'reset_sidebar_link'.
+
+[6] major / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The input fields for First Name, Last Name, and Zip/Postal Code are missing associated labels or aria-label attributes.
+    fix:  Add label elements explicitly associated with each input field using the 'for' attribute or add 'aria-label' attributes to each input.
+
+[7] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: Several sidebar menu links have href attributes set to '#' which do not lead to actual destinations.
+    fix:  Ensure all href attributes point to valid URLs or intended sections of the application.
+
+[8] major / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Clicking the 'All Items' link in the sidebar did not cause a navigation or visible change in the main content area which should reflect the 'All Items' intent.
+    fix:  Ensure that clicking the 'All Items' link in the sidebar triggers navigation or updates the main content area to display all items in the inventory.
+
+[9] major / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The form validation is not correctly indicating to the user which fields are missing or invalid when attempting to continue with all fields empty. The 'error-message-container' should display an error message but appears to be empty after the action.
+    fix:  Ensure that an appropriate error message is displayed within the 'error-message-container' to inform the user that all fields are required and cannot be empty.
+
+[10] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Product list is not fully sorted by price from low to high. The item 'Test.allTheThings() T-Shirt (Red)' priced at $15.99 appears before the item 'Sauce Labs Backpack' which is $29.99, which is correct. However, the price order on the right column seems inconsistent.
+    fix:  Ensure all products are arranged by price in ascending order.
+
+[11] major / ux / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The button to add 'Sauce Labs Bolt T-Shirt' to the cart should be labeled 'Add to cart' instead of 'Remove' after adding to cart.
+    fix:  Change the button label to 'Add to cart' once the item is removed.
+
+[12] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Cart icon shows '4' items but only 3 items have been marked 'Remove', indicating potential mismatch in cart count.
+    fix:  Ensure cart count accurately reflects the number of items added to cart.
+
+[13] major / ux / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The sidebar menu is not visible which is the expected effect of the interaction to reopen the menu.
+    fix:  Ensure the sidebar menu appears when the menu button is clicked.
+
+[14] major / ux / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The error message 'Error: First Name is required' is displayed, but since all fields are empty, there should be error messages for all the fields.
+    fix:  Ensure that each empty required field has its own specific error message displayed.
+
+[15] major / ux / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: After submitting the form with empty fields, there is no visible error message or feedback indicating that fields are required.
+    fix:  Display a visible error message or highlight the required fields when the form is submitted without filling in necessary information.
+
+[16] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The form fields for Last Name and Zip/Postal Code do not have any inputs filled.
+    fix:  Ensure that all required fields are filled before allowing form submission.
+
+[17] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The field for the zip/postal code is not filled out, potentially blocking the 'Continue' button functionality.
+    fix:  Ensure all necessary fields are filled before enabling the 'Continue' button.
+
+[18] minor / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/inventory.html
+    desc: Images used for the open and close menu buttons have adequate alt text but the elements could benefit from explicit labelling as buttons for better accessibility.
+    fix:  Ensure button elements are properly labelled and described not only based on the images they contain but also with roles and additional aria-labelledby or aria-describedby if necessary.
+
+[19] minor / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/cart.html
+    desc: Invisible 'bm-menu-wrap' and its contents have 'aria-hidden' set to 'true' and 'hidden' attribute, which can cause accessibility issues.
+    fix:  Ensure these attributes are dynamically updated correctly when the menu is opened to improve accessibility.
+
+[20] minor / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/cart.html
+    desc: Button elements for react-burger-menu-btn and react-burger-cross-btn have potential accessibility issues due to incorrect tabindex setting.
+    fix:  Ensure tabindex is correctly set and dynamically updated, and all buttons should consistently be in the tab order for accessibility.
+
+[21] minor / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The menu was already open before the action and remained open after the action. Clicking the menu button should reopen the menu only if it was closed.
+    fix:  Ensure that clicking the menu button only opens the menu when it is currently closed, and toggle visibility appropriately.
+
+[22] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The icon indicating items in the cart does not clearly show the number of items.
+    fix:  Ensure the number indicating cart contents is clearly visible and distinguishable.
+
+[23] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The cart icon in the header indicates '2' items, which seems consistent with the expected behavior after adding the item.
+    fix:  No fix needed; behavior seems consistent with expectation.
+
+[24] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Overlap of the cart icon with the cart quantity indicator.
+    fix:  Adjust the spacing or positioning of the cart icon and the quantity indicator.
+
+[25] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The 'Remove' button is present for the 'Test.allTheThings() T-Shirt (Red)', indicating it has been added to the cart. The cart icon on the header also shows an item count of 5, confirming the addition.
+    fix:  None, behavior appears correct as the item is successfully added to the cart.
+
+[26] minor / visual / vision / confidence=medium
+    page: https://www.saucedemo.com/inventory.html
+    desc: Cart icon in the header shows '6' which may not reflect the actual total items if only one more was added recently.
+    fix:  Ensure the cart count accurately reflects the number of items added.
+
+[27] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Text colors on some product cards like 'Sauce Labs Backpack' have low contrast on some displays.
+    fix:  Increase contrast between text and background colors.
+
+[28] minor / visual / vision / confidence=medium
+    page: https://www.saucedemo.com/inventory.html
+    desc: Product images and text are slightly misaligned within their respective cards.
+    fix:  Align text and images consistently within each product card.
+
+[29] minor / ux / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The button text 'Continue' is not vertically centered within the green button.
+    fix:  Adjust the padding or line-height so that the text is vertically centered.
+
+[30] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The text 'Checkout: Your Information' appears to be too close to the top navigation, leaving insufficient spacing.
+    fix:  Add more padding or margin between the header and the 'Checkout: Your Information' text.
+
+[31] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The cart icon with a red circle indicating 6 items does not visually align well with the rest of the header elements.
+    fix:  Align the cart icon more consistently with the header layout.
+
+[32] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The footer text and icons are difficult to see due to low contrast with the background.
+    fix:  Increase the contrast between the text/icons and the background color for better visibility.
+
+[33] minor / ux / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-two.html
+    desc: No visible confirmation message indicating successful submission of form.
+    fix:  Add a confirmation message or redirect to a new page to indicate success.
+
+[34] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-two.html
+    desc: Cart icon with a badge overlaps the header text.
+    fix:  Adjust spacing or alignments to prevent overlap.
+
+
+Interaction trace steps stored: 24
