@@ -36,9 +36,9 @@ def run_pipeline(url, login_config):
     # Step 2, crawl
     db.update_run_status(run_id, "crawling")
     seed_paths = ["/cart.html", "/checkout-step-one.html"]
-    pages, traces = asyncio.run(crawl(url, run_id,
-                                      login_config=login_config,
-                                      seed_paths=seed_paths))
+    pages, traces, no_change_findings = asyncio.run(crawl(url, run_id,
+                                                          login_config=login_config,
+                                                          seed_paths=seed_paths))
     db.save_pages(run_id, pages)
     db.save_traces(run_id, traces)
 
@@ -52,7 +52,7 @@ def run_pipeline(url, login_config):
     reason_findings = reason_analyse(pages)          # tagged source=reason
     transition_findings = analyse_transitions(pages) # tagged source=reason_transition
 
-    findings = vision_findings + reason_findings + transition_findings
+    findings = vision_findings + reason_findings + transition_findings + no_change_findings
     db.save_findings(run_id, findings)
 
     # Step 4, generate reports
@@ -69,7 +69,8 @@ def run_pipeline(url, login_config):
     print(f"Run ID: {run_id}")
     print(f"Findings: {len(findings)} "
           f"(vision {len(vision_findings)}, reason {len(reason_findings)}, "
-          f"transition {len(transition_findings)})")
+          f"transition {len(transition_findings)}, "
+          f"interaction_check {len(no_change_findings)})")
     print(f"HTML report: {html_path}")
     print(f"{'='*50}\n")
 
@@ -83,8 +84,7 @@ def run_pipeline(url, login_config):
 
 
 if __name__ == "__main__":
-    # First full run, clean baseline user
     result = run_pipeline(
         url="https://www.saucedemo.com",
-        login_config=SAUCEDEMO_LOGIN,
+        login_config={**SAUCEDEMO_LOGIN, "username": "problem_user"},
     )

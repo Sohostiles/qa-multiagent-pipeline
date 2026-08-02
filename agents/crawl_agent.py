@@ -18,7 +18,7 @@ DESTRUCTIVE_KEYWORDS = [
 ]
 
 # Default crawl bounds
-DEFAULT_MAX_PAGES = 20
+DEFAULT_MAX_PAGES = 30
 DEFAULT_MAX_DEPTH = 5
 
 
@@ -299,6 +299,7 @@ def _is_interactive_page(elements):
 async def run_scenario(page, run_id, base_name, max_steps=12):
     captured_pages = []
     trace = []
+    no_change_findings = []
     last_dom = await page.content()   # baseline before any action
 
     for step in range(max_steps):
@@ -324,7 +325,34 @@ async def run_scenario(page, run_id, base_name, max_steps=12):
             captured_pages.append(capture)
             last_dom = new_dom
         else:
-            print(f"      (no DOM change, capture skipped)")
+            # No DOM change. For actions that SHOULD cause a change (clicking a
+            # button/link, selecting an option), no change is itself a defect
+            # signal, the control did nothing.
+            action = decision.get("action")
+            value = decision.get("value", "")
+            expected_change = (
+                action == "click"
+                or action == "select"
+                or (action == "fill" and value != "")
+            )
+            if expected_change:
+                no_change_findings.append({
+                    "page_url": page.url,
+                    "issue_type": "functional",
+                    "description": (
+                        f"Interaction had no effect: '{action}' on "
+                        f"{decision.get('selector','')} produced no change in the page, "
+                        f"though a change was expected. Intent: {decision.get('reason','')}"
+                    ),
+                    "severity": "major",
+                    "confidence": "medium",
+                    "location": decision.get("selector", ""),
+                    "recommended_fix": "Ensure this control performs its intended action.",
+                    "source": "interaction_check",
+                })
+                print(f"      (no DOM change on {action}, recorded as potential defect)")
+            else:
+                print(f"      (no DOM change, expected, skipped)")
 
         # Record the trace step for reproducibility
         trace.append({
@@ -341,8 +369,7 @@ async def run_scenario(page, run_id, base_name, max_steps=12):
 
     print(f"    [scenario] complete, {len(captured_pages)} states captured, "
           f"{len(trace)} steps")
-    return captured_pages, trace
-
+    return captured_pages, trace, no_change_findings
 
 # Optional configurable login
 async def _login(page, login_config):
@@ -364,6 +391,7 @@ async def crawl(url, run_id, login_config=None, seed_paths=None,
     print(f"Crawl Agent starting for {url}...")
     pages_crawled = []
     all_traces = []
+    all_no_change = []
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
@@ -413,7 +441,7 @@ async def crawl(url, run_id, login_config=None, seed_paths=None,
             elements = await _get_interactive_elements(page)
             if _is_interactive_page(elements):
                 print(f"    [scenario] interactive page detected: {current_url}")
-                scenario_pages, scenario_trace = await run_scenario(page, run_id, name)
+                scenario_pages, scenario_trace, scenario_nc = await run_scenario(page, run_id, name)
                 pages_crawled.extend(scenario_pages)
 
                 # Attach page and step context, then collect for storage
@@ -421,6 +449,9 @@ async def crawl(url, run_id, login_config=None, seed_paths=None,
                     t["page_url"] = current_url
                     t["step"] = i
                     all_traces.append(t)
+
+                # Collect no-change interaction findings
+                all_no_change.extend(scenario_nc)
 
                 # A scenario moves the browser around, return to the crawl page
                 if page.url != current_url:
@@ -441,5 +472,5 @@ async def crawl(url, run_id, login_config=None, seed_paths=None,
         await browser.close()
 
     print(f"Crawl Agent complete, {len(pages_crawled)} pages captured, "
-          f"{len(all_traces)} trace steps")
-    return pages_crawled, all_traces
+          f"{len(all_traces)} trace steps, {len(all_no_change)} no-change findings")
+    return pages_crawled, all_traces, all_no_change

@@ -1,0 +1,409 @@
+============================================================
+RUN 10 SUMMARY
+============================================================
+Target:   https://www.saucedemo.com
+User:     problem_user
+Status:   completed
+Created:  2026-08-02T22:02:10.197774
+
+Pages captured: 21 (12 interaction, 9 passive)
+Total findings: 75
+
+Findings by source:
+  interaction_check    4
+  reason               34
+  reason_transition    5
+  vision               32
+
+Findings by severity:
+  critical             3
+  major                44
+  minor                28
+
+Findings by issue type:
+  accessibility        14
+  functional           29
+  ux                   11
+  visual               21
+
+============================================================
+ALL FINDINGS
+============================================================
+
+[1] critical / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=6
+    desc: About link in the hamburger menu leads to a 404 error page.
+    fix:  Update the href to point to a valid 'about' page.
+
+[2] critical / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Clicking the 'All Items' link did not perform the expected navigation to the inventory page. The link simply opened the menu without causing any redirect or page change.
+    fix:  Ensure the 'All Items' link correctly navigates back to the inventory page upon being clicked, either by assigning the correct href attribute or implementing navigation logic.
+
+[3] critical / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=6
+    desc: Price is displayed as '$√-1' which is nonsensical and not a valid currency amount.
+    fix:  Ensure the price is correctly retrieved and displayed from database in the appropriate format.
+
+[4] major / functional / interaction_check / confidence=medium
+    page: https://www.saucedemo.com/inventory.html
+    desc: Interaction had no effect: 'select' on [data-test='product-sort-container'] produced no change in the page, though a change was expected. Intent: Test sorting functionality by selecting a different sort option.
+    fix:  Ensure this control performs its intended action.
+
+[5] major / functional / interaction_check / confidence=medium
+    page: https://www.saucedemo.com/inventory.html
+    desc: Interaction had no effect: 'click' on [data-test='add-to-cart-sauce-labs-bolt-t-shirt'] produced no change in the page, though a change was expected. Intent: Add another item to the cart to test the cart functionality with multiple items.
+    fix:  Ensure this control performs its intended action.
+
+[6] major / functional / interaction_check / confidence=medium
+    page: https://www.saucedemo.com/inventory.html
+    desc: Interaction had no effect: 'click' on [data-test='add-to-cart-sauce-labs-fleece-jacket'] produced no change in the page, though a change was expected. Intent: Add another item to the cart to test the cart functionality with multiple items.
+    fix:  Ensure this control performs its intended action.
+
+[7] major / functional / interaction_check / confidence=medium
+    page: https://www.saucedemo.com/inventory.html
+    desc: Interaction had no effect: 'click' on [data-test='add-to-cart-test.allthethings()-t-shirt-(red)'] produced no change in the page, though a change was expected. Intent: Add the last available item to the cart to complete the cart addition process.
+    fix:  Ensure this control performs its intended action.
+
+[8] major / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The menu items in the navigation sidebar have tabIndex set to -1, making them inaccessible via keyboard navigation.
+    fix:  Remove tabIndex='-1' from the sidebar links to make them keyboard navigable.
+
+[9] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The 'About' link in the sidebar points to a 404 error page.
+    fix:  Update the 'About' link to direct users to a valid page with information about the website or contact support if no such page exists.
+
+[10] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/cart.html
+    desc: The 'All Items' link in the sidebar menu has an href attribute set to '#', which does not lead to a specific page.
+    fix:  Ensure the href attribute points to a valid page within the application.
+
+[11] major / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/cart.html
+    desc: The 'About' link in the sidebar menu points to a 404 error page, which breaks navigation for screen readers and other assistive technologies.
+    fix:  Update the 'About' link to point to a valid accessible page that provides meaningful content.
+
+[12] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/cart.html
+    desc: The 'Logout' and 'Reset App State' links in the sidebar menu also have href attributes set to '#', indicating incomplete functionality.
+    fix:  Ensure each link's href attribute is connected to the appropriate functionality or page.
+
+[13] major / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: Buttons and inputs are missing accessible names or labels. The button with ID 'react-burger-menu-btn' and input elements lack corresponding <label> elements or aria-labels.
+    fix:  Add <label> elements linked using 'for' attribute or use aria-label attributes to provide accessible names.
+
+[14] major / functional / reason / confidence=medium
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: Links in the sidebar menu may lead nowhere, as they use a '#' for href.
+    fix:  Ensure that each link has a valid href attribute pointing to a real page or handler function.
+
+[15] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=1
+    desc: The 'All Items' sidebar link has a href attribute set to '#', which does not navigate to a functional destination.
+    fix:  Set the href attribute to a valid route or endpoint that leads to the intended 'All Items' page.
+
+[16] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=1
+    desc: The 'Logout' sidebar link has a href attribute set to '#', which does not trigger any logout action or navigation.
+    fix:  Implement a logout functionality that this link can trigger or navigate to a logout endpoint.
+
+[17] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=1
+    desc: The 'Reset App State' sidebar link has a href attribute set to '#', which does not reset the application state.
+    fix:  Implement a function to reset the app state that this link can trigger.
+
+[18] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=1
+    desc: The 'Shopping Cart' link in the shopping cart container lacks a valid href or onclick action, preventing navigation or interaction.
+    fix:  Provide a valid href or implement an onclick event to navigate to the shopping cart page.
+
+[19] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=1
+    desc: The sidebar navigation includes a link to 'about' which leads to an invalid URL 'https://saucelabs.com/error/404', resulting in a 404 error.
+    fix:  Update the href attribute with a valid URL or page that provides the correct 'About' information.
+
+[20] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=2
+    desc: The 'About' link in the burger menu leads to a 404 error page.
+    fix:  Update the 'About' link to point to a valid webpage.
+
+[21] major / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=2
+    desc: The links and buttons within the burger menu are initially hidden and set to tabindex '-1', which may cause accessibility issues for keyboard users as they cannot tab into these controls.
+    fix:  Ensure that tabindex is set appropriately when the menu is opened to allow keyboard accessibility.
+
+[22] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=3
+    desc: The 'All Items' link in the menu does not have a valid href attribute pointing to a real resource or a router path.
+    fix:  Ensure the 'All Items' link has a valid href attribute pointing to the correct page or route.
+
+[23] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=3
+    desc: The 'Logout' link in the menu does not have a valid href attribute pointing to a real resource or an action.
+    fix:  Ensure the 'Logout' link has a valid href attribute that either logs out the user or triggers a relevant action.
+
+[24] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=3
+    desc: The 'Reset App State' link in the menu does not have a valid href attribute pointing to a real resource or an action.
+    fix:  Ensure the 'Reset App State' link has a valid href attribute that either resets the app state or triggers a relevant action.
+
+[25] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=3
+    desc: The 'About' link in the menu points to a 404 error page.
+    fix:  Update the 'About' link to point to a valid about page or correct the existing link to avoid 404 errors.
+
+[26] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=4
+    desc: The 'About' link in the sidebar menu points to a 404 error page ('https://saucelabs.com/error/404'). This means the link is broken and does not lead to the expected content.
+    fix:  Update the 'About' link to point to a valid page URL or remove the link if the intended destination is no longer available.
+
+[27] major / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/inventory-item.html?id=4
+    desc: Some menu items in the sidebar have tabindex set to -1, making them inaccessible by keyboard users. Elements with a negative tabindex are not focusable via the keyboard.
+    fix:  Remove the tabindex attribute or set it to zero or a positive number to ensure menu items are focusable by keyboard.
+
+[28] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=5
+    desc: The link for 'About' in the sidebar leads to a 404 error page.
+    fix:  Update the 'href' for the 'About' link to a valid page URL.
+
+[29] major / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=5
+    desc: The 'All Items', 'Logout', and 'Reset App State' links in the sidebar have their 'href' attributes set to '#', which could lead to nowhere.
+    fix:  Provide a valid URL for the 'href' attribute of each link.
+
+[30] major / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=6
+    desc: Anchor tags in the hamburger menu have href attributes set to '#', which do not lead to valid URLs and may confuse users of accessibility tools.
+    fix:  Set href attributes to point to actual URLs or use buttons if they trigger a JavaScript action instead.
+
+[31] major / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: Form should display an error message when all fields are empty, but no error message is provided in the DOM.
+    fix:  Display an error message in the '.error-message-container' element when form inputs are left empty and the user attempts to continue.
+
+[32] major / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The error message did not appear after clicking the error button.
+    fix:  Ensure that clicking the error button displays a relevant error message in the error-message-container.
+
+[33] major / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The intent was to fill the 'Last Name' field with 'Doe', but the DOM AFTER the action shows that the 'First Name' field's value is 'Doe', indicating the last name was placed incorrectly.
+    fix:  Ensure the 'Last Name' input field gets updated with 'Doe' instead of the 'First Name' field.
+
+[34] major / functional / reason_transition / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The form submission was not processed because the Last Name field was left empty, which is required. An error indicator appears next to each input, and the submission should have been prevented for incomplete information.
+    fix:  Implement a clear error message indicating that the Last Name field is mandatory, and highlight the field with proper error indicators.
+
+[35] major / ux / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Images for all product listings are identical and unrelated to the product description, depicting a dog instead of the relevant product.
+    fix:  Ensure images are accurate representations of each product.
+
+[36] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Product image is duplicated for all items on the product page.
+    fix:  Ensure each product displays a unique and relevant image.
+
+[37] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The sidebar menu is not open despite the intent to open it using #react-burger-menu-btn.
+    fix:  Ensure that clicking the #react-burger-menu-btn opens the sidebar menu.
+
+[38] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The sidebar menu overlaps the content area, blocking visibility of some product information and images.
+    fix:  Adjust the z-index or positioning of the sidebar to ensure it does not overlap with content when open.
+
+[39] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The product image at the bottom of the page is cut off.
+    fix:  Ensure that product images are fully visible and not cut off by adjusting the container height or padding.
+
+[40] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The menu on the left side is still visible after attempting to close it by clicking the burger cross button.
+    fix:  Ensure that clicking the burger cross button correctly toggles the menu off and returns to the main inventory view.
+
+[41] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The left side menu is overlapping the inventory items on the main page.
+    fix:  Adjust CSS to ensure that the menu does not overlap content when open and should be hidden when closed.
+
+[42] major / ux / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: There is insufficient contrast between the text in the form inputs and the background, which may affect readability.
+    fix:  Increase the text color contrast against the background for better readability.
+
+[43] major / ux / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The error message only addresses the 'First Name is required' field, even though the 'Last Name' and 'Zip/Postal Code' fields are also empty and likely required.
+    fix:  Update the error message to include all empty required fields or provide individual error messages for each field.
+
+[44] major / ux / vision / confidence=medium
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The 'Last Name' field is not filled in, which might be a required input field for the checkout process.
+    fix:  Ensure all required fields are filled before allowing the user to proceed.
+
+[45] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The error message 'Error: Last Name is required' appears indicating a form validation issue.
+    fix:  Ensure that the 'Last Name' field is filled before the form can be submitted.
+
+[46] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=1
+    desc: The product image appears to be cut-off or cropped at the bottom.
+    fix:  Ensure the full product image fits within the allocated space without being cropped.
+
+[47] major / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=6
+    desc: The text 'ITEM NOT FOUND' and the following message content seem irrelevant to the context of an e-commerce product page. It looks like a phone call error message.
+    fix:  Replace the error message with relevant product information or correct error messaging for a product page.
+
+[48] minor / functional / reason / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The shopping cart link is present but lacks informative text describing its purpose for screen readers.
+    fix:  Add an 'aria-label' or 'title' attribute with a descriptive value such as 'Shopping Cart' to the shopping cart link.
+
+[49] minor / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/cart.html
+    desc: Buttons within the sidebar ('Open Menu', 'Close Menu') and potentially other interactive elements lack aria-labels or explicit labels for easy identification by screen readers.
+    fix:  Add aria-label attributes to provide meaningful context for each button's action.
+
+[50] minor / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=1
+    desc: The images used for the menu open and close buttons are missing descriptive alt text.
+    fix:  Add descriptive alt text that clearly indicates the function of the image, such as 'Open Menu' and 'Close Menu'.
+
+[51] minor / functional / reason / confidence=medium
+    page: https://www.saucedemo.com/inventory-item.html?id=2
+    desc: The 'Reset App State' link in the burger menu has no href, making it non-functional under typical circumstances.
+    fix:  Provide an appropriate href or other event handler so the link performs its intended function.
+
+[52] minor / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/inventory-item.html?id=2
+    desc: The 'Open Menu' button has an img with alt text 'Open Menu', effectively duplicating the label unnecessarily.
+    fix:  Consider removing the alt attribute from the img to avoid redundancy, relying on the button label.
+
+[53] minor / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/inventory-item.html?id=3
+    desc: The header container does not have a semantic heading structure for better accessibility.
+    fix:  Add appropriate header elements (e.g., <h1>, <h2>) for the sections within the header for better screen reader navigation.
+
+[54] minor / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/inventory-item.html?id=4
+    desc: The 'shopping_cart_link' contains a span for the shopping cart badge, but it lacks proper ARIA roles or labels that communicate its purpose to assistive technologies.
+    fix:  Add an ARIA role and label to the shopping cart link to describe its functionality for screen readers.
+
+[55] minor / accessibility / reason / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=5
+    desc: The image used for the burger menu open and close button does not have meaningful alt text.
+    fix:  Provide meaningful alt text that describes the purpose of the image, such as 'Open navigation menu' and 'Close navigation menu'.
+
+[56] minor / accessibility / reason / confidence=medium
+    page: https://www.saucedemo.com/inventory-item.html?id=6
+    desc: Image elements used for the open and close menu buttons have alt attributes that may not effectively communicate their purpose to screen reader users.
+    fix:  Ensure alt text clearly describes the button action, such as 'Open navigation menu' and 'Close navigation menu'.
+
+[57] minor / accessibility / reason / confidence=low
+    page: https://www.saucedemo.com/inventory-item.html?id=6
+    desc: Elements with 'aria-hidden' attribute set to 'true' also have 'hidden' attribute, which could be redundant and may not be necessary.
+    fix:  Review accessibility settings to confirm if both attributes are necessary, and remove 'hidden' attribute if 'aria-hidden' suffices.
+
+[58] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Footer text color is low contrast against the dark background, making it hard to read.
+    fix:  Increase the contrast between the text and background colors by lightening the text color.
+
+[59] minor / ux / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: Cart icon shows a notification badge with '1', indicating one item added to cart.
+    fix:  No fix needed unless the count is incorrect.
+
+[60] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory.html
+    desc: The image of the Sauce Labs Onesie product is cut-off, affecting product visibility.
+    fix:  Ensure product images resize correctly or provide additional spacing to prevent overlap or cutoff.
+
+[61] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/cart.html
+    desc: Text on 'Remove' buttons is partially overlapping with the button borders.
+    fix:  Adjust padding or margin inside the button to ensure the text is not flush with the borders.
+
+[62] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/cart.html
+    desc: The 'Continue Shopping' button contains an arrow that is blurry.
+    fix:  Replace the arrow image with a higher resolution version for clearer display.
+
+[63] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The text 'Swag Labs' in the header is off-center, not properly aligned with the menu button and cart icon.
+    fix:  Ensure the header text is centered or aligned consistently within the header.
+
+[64] minor / ux / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The footer's content appears slightly cramped and close to the edge of the footer container.
+    fix:  Provide more padding around the footer content to enhance visual comfort and separation.
+
+[65] minor / ux / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The placeholder text for First Name and Zip/Postal Code fields is missing.
+    fix:  Ensure that placeholder text is displayed for First Name and Zip/Postal Code fields.
+
+[66] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The spacing between the form labels and input fields is inconsistent.
+    fix:  Adjust CSS to provide consistent spacing between labels and input fields.
+
+[67] minor / ux / vision / confidence=medium
+    page: https://www.saucedemo.com/checkout-step-one.html
+    desc: The 'Last Name' field is highlighted in red, indicating a validation error. However, the input field above (presumably the 'First Name') does not have a label, which could cause confusion.
+    fix:  Add a label or placeholder text to the field above 'Last Name' to indicate it requires the first name.
+
+[68] minor / ux / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=1
+    desc: There is a lack of clear visual separation or distinction between the product title and description.
+    fix:  Add styling such as increased spacing or a different font size to better separate the product title from the description.
+
+[69] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=2
+    desc: The product description text 'Sauce Labs Onesie' and subsequent description is misaligned; it appears too close to the right edge of the image box.
+    fix:  Add padding or margin to the left of the text to ensure consistent spacing away from the image.
+
+[70] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=2
+    desc: The cart icon in the top right corner has a red notification badge '3' which overlaps the cart icon slightly.
+    fix:  Adjust the positioning of the notification badge so it does not overlap with the cart icon.
+
+[71] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=3
+    desc: The image of the shirt is partially covered by the hanger, which may distract from product focus.
+    fix:  Crop or adjust the image to focus more on the shirt and less on the hanger.
+
+[72] minor / ux / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=3
+    desc: The 'Add to cart' button is quite small relative to the available space, which may affect usability.
+    fix:  Increase the font size and overall size of the 'Add to cart' button for better visibility.
+
+[73] minor / ux / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=4
+    desc: The product description 'carry.allTheThings()...' contains what looks like a function call, which may not be user-friendly or intended.
+    fix:  Review and adjust the product description to remove any unintended programming references.
+
+[74] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=4
+    desc: The 'Remove' button appears to have low contrast against the white background due to its thin outline, which might affect visibility.
+    fix:  Increase the contrast of the 'Remove' button by using a thicker outline or a filled style.
+
+[75] minor / visual / vision / confidence=high
+    page: https://www.saucedemo.com/inventory-item.html?id=6
+    desc: Add to cart button is present even though the item is reported as not found, which is confusing.
+    fix:  Hide the 'Add to cart' button or disable it when the item is not found.
+
+
+Interaction trace steps stored: 19

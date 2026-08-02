@@ -1,0 +1,209 @@
+Loaded 75 findings for run 10
+
+Consolidated into 48 distinct issues
+
+============================================================
+
+[1] [ux/major] (seen on 1 page(s), 2 raw findings)
+    Images for all product listings are identical and unrelated to the product description, depicting a dog instead of the relevant product.
+    Fix: Ensure images are accurate representations of each product.
+
+[2] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    Footer text color is low contrast against the dark background, making it hard to read.
+    Fix: Increase the contrast between the text and background colors by lightening the text color.
+
+[3] [ux/minor] (seen on 1 page(s), 1 raw findings)
+    Cart icon shows a notification badge with '1', indicating one item added to cart.
+    Fix: No fix needed unless the count is incorrect.
+
+[4] [visual/major] (seen on 1 page(s), 4 raw findings)
+    The sidebar menu is not open despite the intent to open it using #react-burger-menu-btn.
+    Fix: Ensure that clicking the #react-burger-menu-btn opens the sidebar menu.
+
+[5] [visual/major] (seen on 2 page(s), 3 raw findings)
+    The product image at the bottom of the page is cut off.
+    Fix: Ensure that product images are fully visible and not cut off by adjusting the container height or padding.
+    Pages: inventory-item.html?id=1, inventory.html
+
+[6] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    Text on 'Remove' buttons is partially overlapping with the button borders.
+    Fix: Adjust padding or margin inside the button to ensure the text is not flush with the borders.
+
+[7] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    The 'Continue Shopping' button contains an arrow that is blurry.
+    Fix: Replace the arrow image with a higher resolution version for clearer display.
+
+[8] [ux/major] (seen on 1 page(s), 1 raw findings)
+    There is insufficient contrast between the text in the form inputs and the background, which may affect readability.
+    Fix: Increase the text color contrast against the background for better readability.
+
+[9] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    The text 'Swag Labs' in the header is off-center, not properly aligned with the menu button and cart icon.
+    Fix: Ensure the header text is centered or aligned consistently within the header.
+
+[10] [ux/minor] (seen on 1 page(s), 1 raw findings)
+    The footer's content appears slightly cramped and close to the edge of the footer container.
+    Fix: Provide more padding around the footer content to enhance visual comfort and separation.
+
+[11] [ux/major] (seen on 1 page(s), 4 raw findings)
+    The error message only addresses the 'First Name is required' field, even though the 'Last Name' and 'Zip/Postal Code' fields are also empty and likely required.
+    Fix: Update the error message to include all empty required fields or provide individual error messages for each field.
+
+[12] [ux/minor] (seen on 1 page(s), 1 raw findings)
+    The placeholder text for First Name and Zip/Postal Code fields is missing.
+    Fix: Ensure that placeholder text is displayed for First Name and Zip/Postal Code fields.
+
+[13] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    The spacing between the form labels and input fields is inconsistent.
+    Fix: Adjust CSS to provide consistent spacing between labels and input fields.
+
+[14] [ux/minor] (seen on 1 page(s), 1 raw findings)
+    The 'Last Name' field is highlighted in red, indicating a validation error. However, the input field above (presumably the 'First Name') does not have a label, which could cause confusion.
+    Fix: Add a label or placeholder text to the field above 'Last Name' to indicate it requires the first name.
+
+[15] [ux/minor] (seen on 1 page(s), 1 raw findings)
+    There is a lack of clear visual separation or distinction between the product title and description.
+    Fix: Add styling such as increased spacing or a different font size to better separate the product title from the description.
+
+[16] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    The product description text 'Sauce Labs Onesie' and subsequent description is misaligned; it appears too close to the right edge of the image box.
+    Fix: Add padding or margin to the left of the text to ensure consistent spacing away from the image.
+
+[17] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    The cart icon in the top right corner has a red notification badge '3' which overlaps the cart icon slightly.
+    Fix: Adjust the positioning of the notification badge so it does not overlap with the cart icon.
+
+[18] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    The image of the shirt is partially covered by the hanger, which may distract from product focus.
+    Fix: Crop or adjust the image to focus more on the shirt and less on the hanger.
+
+[19] [ux/minor] (seen on 1 page(s), 1 raw findings)
+    The 'Add to cart' button is quite small relative to the available space, which may affect usability.
+    Fix: Increase the font size and overall size of the 'Add to cart' button for better visibility.
+
+[20] [ux/minor] (seen on 1 page(s), 1 raw findings)
+    The product description 'carry.allTheThings()...' contains what looks like a function call, which may not be user-friendly or intended.
+    Fix: Review and adjust the product description to remove any unintended programming references.
+
+[21] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    The 'Remove' button appears to have low contrast against the white background due to its thin outline, which might affect visibility.
+    Fix: Increase the contrast of the 'Remove' button by using a thicker outline or a filled style.
+
+[22] [visual/major] (seen on 1 page(s), 1 raw findings)
+    The text 'ITEM NOT FOUND' and the following message content seem irrelevant to the context of an e-commerce product page. It looks like a phone call error message.
+    Fix: Replace the error message with relevant product information or correct error messaging for a product page.
+
+[23] [visual/critical] (seen on 1 page(s), 1 raw findings)
+    Price is displayed as '$√-1' which is nonsensical and not a valid currency amount.
+    Fix: Ensure the price is correctly retrieved and displayed from database in the appropriate format.
+
+[24] [visual/minor] (seen on 1 page(s), 1 raw findings)
+    Add to cart button is present even though the item is reported as not found, which is confusing.
+    Fix: Hide the 'Add to cart' button or disable it when the item is not found.
+
+[25] [accessibility/major] (seen on 2 page(s), 2 raw findings)
+    The menu items in the navigation sidebar have tabIndex set to -1, making them inaccessible via keyboard navigation.
+    Fix: Remove tabIndex='-1' from the sidebar links to make them keyboard navigable.
+    Pages: inventory-item.html?id=4, inventory.html
+
+[26] [functional/major] (seen on 8 page(s), 8 raw findings)
+    The 'About' link in the sidebar points to a 404 error page.
+    Fix: Update the 'About' link to direct users to a valid page with information about the website or contact support if no such page exists.
+    Pages: cart.html, inventory-item.html?id=1, inventory-item.html?id=2, inventory-item.html?id=3, inventory-item.html?id=4, inventory-item.html?id=5, inventory-item.html?id=6, inventory.html
+
+[27] [functional/minor] (seen on 1 page(s), 1 raw findings)
+    The shopping cart link is present but lacks informative text describing its purpose for screen readers.
+    Fix: Add an 'aria-label' or 'title' attribute with a descriptive value such as 'Shopping Cart' to the shopping cart link.
+
+[28] [functional/major] (seen on 5 page(s), 5 raw findings)
+    The 'All Items' link in the sidebar menu has an href attribute set to '#', which does not lead to a specific page.
+    Fix: Ensure the href attribute points to a valid page within the application.
+    Pages: cart.html, checkout-step-one.html, inventory-item.html?id=1, inventory-item.html?id=3, inventory.html
+
+[29] [functional/major] (seen on 3 page(s), 3 raw findings)
+    The 'Logout' and 'Reset App State' links in the sidebar menu also have href attributes set to '#', indicating incomplete functionality.
+    Fix: Ensure each link's href attribute is connected to the appropriate functionality or page.
+    Pages: cart.html, inventory-item.html?id=1, inventory-item.html?id=3
+
+[30] [accessibility/minor] (seen on 1 page(s), 1 raw findings)
+    Buttons within the sidebar ('Open Menu', 'Close Menu') and potentially other interactive elements lack aria-labels or explicit labels for easy identification by screen readers.
+    Fix: Add aria-label attributes to provide meaningful context for each button's action.
+
+[31] [accessibility/major] (seen on 1 page(s), 1 raw findings)
+    Buttons and inputs are missing accessible names or labels. The button with ID 'react-burger-menu-btn' and input elements lack corresponding <label> elements or aria-labels.
+    Fix: Add <label> elements linked using 'for' attribute or use aria-label attributes to provide accessible names.
+
+[32] [functional/major] (seen on 2 page(s), 2 raw findings)
+    The 'Reset App State' sidebar link has a href attribute set to '#', which does not reset the application state.
+    Fix: Implement a function to reset the app state that this link can trigger.
+    Pages: inventory-item.html?id=1, inventory-item.html?id=3
+
+[33] [functional/major] (seen on 1 page(s), 1 raw findings)
+    The 'Shopping Cart' link in the shopping cart container lacks a valid href or onclick action, preventing navigation or interaction.
+    Fix: Provide a valid href or implement an onclick event to navigate to the shopping cart page.
+
+[34] [accessibility/minor] (seen on 3 page(s), 3 raw findings)
+    The images used for the menu open and close buttons are missing descriptive alt text.
+    Fix: Add descriptive alt text that clearly indicates the function of the image, such as 'Open Menu' and 'Close Menu'.
+    Pages: inventory-item.html?id=1, inventory-item.html?id=5, inventory-item.html?id=6
+
+[35] [accessibility/major] (seen on 1 page(s), 1 raw findings)
+    The links and buttons within the burger menu are initially hidden and set to tabindex '-1', which may cause accessibility issues for keyboard users as they cannot tab into these controls.
+    Fix: Ensure that tabindex is set appropriately when the menu is opened to allow keyboard accessibility.
+
+[36] [functional/minor] (seen on 1 page(s), 1 raw findings)
+    The 'Reset App State' link in the burger menu has no href, making it non-functional under typical circumstances.
+    Fix: Provide an appropriate href or other event handler so the link performs its intended function.
+
+[37] [accessibility/minor] (seen on 1 page(s), 1 raw findings)
+    The 'Open Menu' button has an img with alt text 'Open Menu', effectively duplicating the label unnecessarily.
+    Fix: Consider removing the alt attribute from the img to avoid redundancy, relying on the button label.
+
+[38] [accessibility/minor] (seen on 1 page(s), 1 raw findings)
+    The header container does not have a semantic heading structure for better accessibility.
+    Fix: Add appropriate header elements (e.g., <h1>, <h2>) for the sections within the header for better screen reader navigation.
+
+[39] [accessibility/minor] (seen on 1 page(s), 1 raw findings)
+    The 'shopping_cart_link' contains a span for the shopping cart badge, but it lacks proper ARIA roles or labels that communicate its purpose to assistive technologies.
+    Fix: Add an ARIA role and label to the shopping cart link to describe its functionality for screen readers.
+
+[40] [functional/major] (seen on 1 page(s), 1 raw findings)
+    The 'All Items', 'Logout', and 'Reset App State' links in the sidebar have their 'href' attributes set to '#', which could lead to nowhere.
+    Fix: Provide a valid URL for the 'href' attribute of each link.
+
+[41] [accessibility/major] (seen on 1 page(s), 1 raw findings)
+    Anchor tags in the hamburger menu have href attributes set to '#', which do not lead to valid URLs and may confuse users of accessibility tools.
+    Fix: Set href attributes to point to actual URLs or use buttons if they trigger a JavaScript action instead.
+
+[42] [accessibility/minor] (seen on 1 page(s), 1 raw findings)
+    Elements with 'aria-hidden' attribute set to 'true' also have 'hidden' attribute, which could be redundant and may not be necessary.
+    Fix: Review accessibility settings to confirm if both attributes are necessary, and remove 'hidden' attribute if 'aria-hidden' suffices.
+
+[43] [functional/major] (seen on 1 page(s), 2 raw findings)
+    Form should display an error message when all fields are empty, but no error message is provided in the DOM.
+    Fix: Display an error message in the '.error-message-container' element when form inputs are left empty and the user attempts to continue.
+
+[44] [functional/major] (seen on 1 page(s), 1 raw findings)
+    The intent was to fill the 'Last Name' field with 'Doe', but the DOM AFTER the action shows that the 'First Name' field's value is 'Doe', indicating the last name was placed incorrectly.
+    Fix: Ensure the 'Last Name' input field gets updated with 'Doe' instead of the 'First Name' field.
+
+[45] [functional/major] (seen on 1 page(s), 1 raw findings)
+    Interaction had no effect: 'select' on [data-test='product-sort-container'] produced no change in the page, though a change was expected. Intent: Test sorting functionality by selecting a different sort option.
+    Fix: Ensure this control performs its intended action.
+
+[46] [functional/major] (seen on 1 page(s), 1 raw findings)
+    Interaction had no effect: 'click' on [data-test='add-to-cart-sauce-labs-bolt-t-shirt'] produced no change in the page, though a change was expected. Intent: Add another item to the cart to test the cart functionality with multiple items.
+    Fix: Ensure this control performs its intended action.
+
+[47] [functional/major] (seen on 1 page(s), 1 raw findings)
+    Interaction had no effect: 'click' on [data-test='add-to-cart-sauce-labs-fleece-jacket'] produced no change in the page, though a change was expected. Intent: Add another item to the cart to test the cart functionality with multiple items.
+    Fix: Ensure this control performs its intended action.
+
+[48] [functional/major] (seen on 1 page(s), 1 raw findings)
+    Interaction had no effect: 'click' on [data-test='add-to-cart-test.allthethings()-t-shirt-(red)'] produced no change in the page, though a change was expected. Intent: Add the last available item to the cart to complete the cart addition process.
+    Fix: Ensure this control performs its intended action.
+
+============================================================
+Raw findings:      75
+Distinct issues:   48
+Duplication ratio: 1.6x

@@ -67,7 +67,9 @@ def analyse(pages):
             continue
 
         # Skip near-duplicate states already analysed this run
-        fp = _fingerprint(dom)
+        # Include the URL so distinct pages (e.g. different product items) are
+        # never collapsed together, even if their DOM structure is similar
+        fp = page.get("url", "") + "|" + _fingerprint(dom)
         if fp in seen:
             print(f"  Skipping near-duplicate: {page['url']}")
             continue
