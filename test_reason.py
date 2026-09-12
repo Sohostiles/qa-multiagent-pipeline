@@ -7,7 +7,6 @@ from agents.reason_agent import analyse, analyse_transitions
 
 # For the transition test we need a before and after DOM pair
 # before is the passive checkout form, after is the empty submit state
-# Update these paths to match files you actually have in dom/
 CHECKOUT_BEFORE = "dom/999_3_checkout-step-one.html"
 CHECKOUT_AFTER = "dom/999_3_checkout-step-one_step4.html"
 

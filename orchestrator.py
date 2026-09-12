@@ -2,10 +2,11 @@
 import asyncio
 
 import db
-from agents.crawl_agent import crawl
+from agents.crawl_agent import crawl, LoginFailed
 from agents.vision_agent import analyse as vision_analyse
 from agents.reason_agent import analyse as reason_analyse, analyse_transitions
 from agents.report_agent import generate_markdown
+from agents.classifier_agent import classify
 from utils.html_report import generate_html
 
 # SauceDemo login, expressed as a generic login_config for the crawler
@@ -36,9 +37,14 @@ def run_pipeline(url, login_config):
     # Step 2, crawl
     db.update_run_status(run_id, "crawling")
     seed_paths = ["/cart.html", "/checkout-step-one.html"]
-    pages, traces, no_change_findings = asyncio.run(crawl(url, run_id,
-                                                          login_config=login_config,
-                                                          seed_paths=seed_paths))
+    try:
+        pages, traces, no_change_findings = asyncio.run(crawl(url, run_id,
+                                                              login_config=login_config,
+                                                              seed_paths=seed_paths))
+    except LoginFailed as e:
+        print(f"\n  {e}")
+        db.update_run_status(run_id, "login_failed")
+        return {"run_id": run_id, "findings": [], "login_failed": True, "reason": str(e)}
     db.save_pages(run_id, pages)
     db.save_traces(run_id, traces)
 
@@ -53,6 +59,11 @@ def run_pipeline(url, login_config):
     transition_findings = analyse_transitions(pages) # tagged source=reason_transition
 
     findings = vision_findings + reason_findings + transition_findings + no_change_findings
+
+    # Step 3b, classify, one rubric applied to every finding regardless of source
+    db.update_run_status(run_id, "classifying")
+    findings = classify(findings)
+
     db.save_findings(run_id, findings)
 
     # Step 4, generate reports

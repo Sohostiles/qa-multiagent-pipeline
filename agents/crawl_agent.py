@@ -211,24 +211,35 @@ async def _execute(page, decision):
     except Exception as e:
         return False, f"action failed on {selector}: {e}"
 
+CREDENTIALS = {"username", "user-name", "user_name", "password", "pass", "email", "login", "pwd", "signing", "signin", "emailme"}
+
+def _is_credential_field(element):
+    text = " ".join(
+        str(element.get(k, ""))
+        for k in ["name", "placeholder", "text", "selector", "type"]
+    ).lower()
+    if element.get("type") == "password":
+        return True
+    return any(term in text for term in CREDENTIALS)
 
 # Drop elements the LLM must never pick, like logout or reset
-def _filter_safe_elements(elements):
+def _filter_safe_elements(elements, block_credentials=False):
     safe = []
     for e in elements:
         label = f"{e.get('name','')} {e.get('text','')}".lower()
         if _is_destructive(label):
+            continue
+        if block_credentials and _is_credential_field(e):
             continue
         if e.get("selector") is None:
             continue
         safe.append(e)
     return safe
 
-
 # Ask the LLM for the next step
 # It acts as a QA tester, infers a goal for the page, and drives toward bugs
 async def decide_next_action(page_url, elements, history):
-    safe = _filter_safe_elements(elements)
+    safe = _filter_safe_elements(elements, block_credentials=True)
 
     # Compact element list for the prompt
     element_lines = "\n".join(
@@ -325,7 +336,7 @@ async def run_scenario(page, run_id, base_name, max_steps=12):
             captured_pages.append(capture)
             last_dom = new_dom
         else:
-            # No DOM change. For actions that SHOULD cause a change (clicking a
+            # No DOM change for actions that SHOULD cause a change (clicking a
             # button/link, selecting an option), no change is itself a defect
             # signal, the control did nothing.
             action = decision.get("action")
@@ -371,15 +382,41 @@ async def run_scenario(page, run_id, base_name, max_steps=12):
           f"{len(trace)} steps")
     return captured_pages, trace, no_change_findings
 
+class LoginFailed(Exception):
+    pass
+
+DEFAULT_ERROR_SELECTORS = "[data-test='error'], .error-message-container, [role='alert']"
+
 # Optional configurable login
 async def _login(page, login_config):
-    await page.goto(login_config["url"])
+    login_url = login_config["url"]
+    await page.goto(login_url)
     await page.fill(login_config["username_selector"], login_config["username"])
     await page.fill(login_config["password_selector"], login_config["password"])
     await page.click(login_config["submit_selector"])
     await page.wait_for_load_state("networkidle")
-    print(f"  Logged in as {login_config.get('username', '(unknown)')}")
 
+    error_text = ""
+    selectors = login_config.get("error_selectors", DEFAULT_ERROR_SELECTORS)
+    try:
+        element = await page.query_selector(selectors)
+        if element:
+            error_text = (await element.inner_text() or "").strip()
+    except Exception:
+        pass
+
+
+    expected = login_config.get("success_url")
+    if expected:
+        navigated = expected in page.url
+    else:
+        navigated = page.url.rstrip("/") != login_url.rstrip("/")
+
+    if error_text or not navigated:
+        reason = error_text or f"did not navigate away from login page: {page.url}"
+        raise LoginFailed(f"Login failed: {reason}")
+    
+    print(f"  Logged in as {login_config.get('username', '(unknown)')}")
 
 # Generic crawl, returns a list of page dicts
 # url is where to start crawling, post login for SauceDemo

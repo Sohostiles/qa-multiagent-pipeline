@@ -1,9 +1,8 @@
 # dedup_findings.py
 # Collapse duplicate findings for a run into distinct issues, using one LLM call
-# Same underlying bug reported on many pages becomes one entry, noting all pages
-# Works on stored findings only, no crawl and no re-analysis
+# Same underlying bug reported on many pages becomes one entry
+# Works on stored findings only
 # The model only groups ids, descriptions come from the stored findings
-# Usage: python dedup_findings.py <run_id>
 
 import sys
 import json
