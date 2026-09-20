@@ -5,8 +5,8 @@ import db
 from agents.crawl_agent import crawl, LoginFailed
 from agents.vision_agent import analyse as vision_analyse
 from agents.reason_agent import analyse as reason_analyse, analyse_transitions
-from agents.report_agent import generate_markdown
-from agents.classifier_agent import classify
+from agents.report_agent import generate_markdown, consolidate
+from agents.classifier_agent import classify, split_reportable
 from utils.html_report import generate_html
 
 # SauceDemo login, expressed as a generic login_config for the crawler
@@ -20,7 +20,7 @@ SAUCEDEMO_LOGIN = {
     "submit_selector": "#login-button",
 }
 
-def run_pipeline(url, login_config):
+def run_pipeline(url, login_config, run_id=None):
     username = login_config.get("username", "anonymous") if login_config else "anonymous"
 
     print(f"\n{'='*50}")
@@ -29,18 +29,20 @@ def run_pipeline(url, login_config):
     print(f"User: {username}")
     print(f"{'='*50}\n")
 
-    # Step 1, init DB and create run record
+    # Step 1, prepare the database
     db.init_db()
-    run_id = db.create_run(url, username)
+
+    # Create a run unless the API already created it
+    if run_id is None:
+        run_id = db.create_run(url, username)
+
     print(f"Run ID: {run_id}\n")
 
     # Step 2, crawl
     db.update_run_status(run_id, "crawling")
-    seed_paths = ["/cart.html", "/checkout-step-one.html"]
     try:
         pages, traces, no_change_findings = asyncio.run(crawl(url, run_id,
-                                                              login_config=login_config,
-                                                              seed_paths=seed_paths))
+                                                              login_config=login_config))
     except LoginFailed as e:
         print(f"\n  {e}")
         db.update_run_status(run_id, "login_failed")
@@ -60,16 +62,26 @@ def run_pipeline(url, login_config):
 
     findings = vision_findings + reason_findings + transition_findings + no_change_findings
 
-    # Step 3b, classify, one rubric applied to every finding regardless of source
+    # Step 3b, classify all findings using the same rubric.
     db.update_run_status(run_id, "classifying")
     findings = classify(findings)
 
+    # Save all findings, including those marked as not_a_bug.
     db.save_findings(run_id, findings)
 
-    # Step 4, generate reports
+    # Separate findings to include in the reports
+    findings, suppressed = split_reportable(findings)
+
+    # Step 4, group repeated findings and generate both reports
     db.update_run_status(run_id, "reporting")
-    report_content = generate_markdown(findings, run_id, username)
-    html_path = generate_html(findings, report_content, run_id, username, pages)
+    findings = consolidate(findings)
+
+    report_content = generate_markdown(
+    findings, run_id, username, target_url=url
+    )
+    html_path = generate_html(
+        findings, report_content, run_id, username, pages, target_url=url
+    )
 
     # Step 5, mark complete
     db.save_report(run_id, report_content)
@@ -78,7 +90,7 @@ def run_pipeline(url, login_config):
     print(f"\n{'='*50}")
     print(f"Pipeline complete")
     print(f"Run ID: {run_id}")
-    print(f"Findings: {len(findings)} "
+    print(f"Findings: {len(findings)} reported, {len(suppressed)} suppressed "
           f"(vision {len(vision_findings)}, reason {len(reason_findings)}, "
           f"transition {len(transition_findings)}, "
           f"interaction_check {len(no_change_findings)})")

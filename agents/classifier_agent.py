@@ -9,9 +9,22 @@
 import json
 from config import MODEL, chat_with_retry
 
-VALID_SEVERITIES = {"critical", "major", "minor"}
+VALID_SEVERITIES = {"critical", "major", "minor", "not_a_bug"}
 # The same rubric was used when hand-labelling the traininng data
-RUBRIC = """critical: BOTH conditions must hold.
+RUBRIC = """not_a_bug: the finding does not describe a defect. Use when ANY of
+  these apply:
+  (a) it describes the application behaving correctly, for example a Remove
+      button appearing after an item was added, or a cart count matching the
+      number of items added;
+  (b) it reports a state the test itself created, for example a form field being
+      empty or holding a test value, when the scenario deliberately submitted
+      empty or invalid input;
+  (c) it is neutral description with no defect claimed, for example noting that a
+      heading is centred or a button is visually distinct;
+  (d) it treats the current or near-future year as an error in a copyright notice.
+  A finding that reads as an observation rather than a complaint is not_a_bug.
+
+critical: BOTH conditions must hold.
   (a) something is demonstrably broken: a control produced no change when
       activated, a link leads to a 404, input landed in the wrong field, or
       displayed data is impossible or corrupt; AND
@@ -32,22 +45,25 @@ Apply this rubric exactly:
 {RUBRIC}
 
 Decision rules, applied in order:
-1. If the finding says an interaction had no effect, or reports a 404, corrupt
+1. First ask whether the finding describes something wrong at all. If it
+   describes correct behaviour, a state the test created, or is neutral
+   description, return not_a_bug and stop. Do not assign a severity.
+2. If the finding says an interaction had no effect, or reports a 404, corrupt
    data, or input placed in the wrong field, it is critical.
-2. Otherwise, accessibility findings are NEVER critical. An accessibility
+3. Otherwise, accessibility findings are NEVER critical. An accessibility
    finding is major only if a user of assistive technology cannot identify or
    operate a control at all: a button or link with no accessible name, or a form
    input with no label. Every other accessibility finding is minor, including
    imperfect alt text, redundant alt text, missing aria-expanded, and tabindex
    or focus-order concerns.
-3. Otherwise, findings about appearance alone are minor.
-4. Reserve critical for rule 1. It should be rare.
-5. Critical requires BOTH a demonstrable break AND obstruction of the purchase
+4. Otherwise, findings about appearance alone are minor.
+5. Reserve critical for rule 2. It should be rare.
+6. Critical requires BOTH a demonstrable break AND obstruction of the purchase
    flow. A menu that will not open, a miscounting badge, or a missing error
    message is broken but does not stop a purchase: those are major.
 
 You are given a numbered list of findings. Respond ONLY with JSON:
-{{"severities": [{{"i": <index>, "severity": "critical|major|minor"}}, ...]}}
+{{"severities": [{{"i": <index>, "severity": "not_a_bug|critical|major|minor"}}, ...]}}
 
 Every index in the input must appear exactly once. Do not invent indices, do not
 rewrite the findings, and do not add commentary."""
@@ -110,7 +126,7 @@ def _classify_batch(offset, batch):
 
 # Run all findings through the classifier and update their severity.
 # The original severity is also saved so it can be compared later.
-def classify(findings, batch_size=25):
+def classify(findings, batch_size=5):
     if not findings:
         return findings
 
@@ -149,8 +165,8 @@ def classify(findings, batch_size=25):
     return findings
 
 
-# Compare the severity originally assigned by the analysis agent
-# with the final severity assigned by the classifier.
+# Compare the severity assigned by the analysis agent
+# with the severity assigned by the classifier.
 def compare(findings):
     from collections import Counter
 
@@ -167,3 +183,25 @@ def compare(findings):
     for (before, after), count in pairs.most_common():
         mark = "  (unchanged)" if before == after else ""
         print(f"{str(before):<20}{str(after):<14}{count:>7}{mark}")
+
+
+# Separate findings marked as not_a_bug by the classifier.
+# Return them too so they can be stored and checked later.
+def split_reportable(findings):
+    reportable = []
+    suppressed = []
+
+    for finding in findings:
+        if finding.get("severity") == "not_a_bug":
+            suppressed.append(finding)
+        else:
+            reportable.append(finding)
+
+    if suppressed:
+        rate = len(suppressed) / len(findings) * 100
+        print(
+            f"  Suppressed {len(suppressed)} of {len(findings)} findings "
+            f"as not a defect ({rate:.1f}%)"
+        )
+
+    return reportable, suppressed

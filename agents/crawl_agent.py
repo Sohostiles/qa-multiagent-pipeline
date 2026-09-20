@@ -434,11 +434,16 @@ async def crawl(url, run_id, login_config=None, seed_paths=None,
         browser = await p.chromium.launch(headless=False)
         page = await browser.new_page()
 
-        # Optional login
+        # Log in first if credentials were provided
         if login_config:
             await _login(page, login_config)
 
-        start_url = page.url if login_config else url
+        # Open the target using the same browser session
+        await page.goto(url)
+        await page.wait_for_load_state("networkidle")
+
+        # Use the final URL in case the target redirects
+        start_url = page.url
         parsed_start = urlparse(start_url)
         base_domain = parsed_start.netloc
         origin = f"{parsed_start.scheme}://{parsed_start.netloc}"

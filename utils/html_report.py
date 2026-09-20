@@ -3,12 +3,13 @@
 import base64
 from datetime import datetime
 from config import OUTPUTS_DIR
+from html import escape
 
 def encode_image(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-def generate_html(findings, report_content, run_id, username, pages):
+def generate_html(findings, report_content, run_id, username, pages, target_url):
     print("Generating HTML report...")
 
     critical = [f for f in findings if f["severity"] == "critical"]
@@ -76,9 +77,9 @@ def generate_html(findings, report_content, run_id, username, pages):
 
     <h2>Test Details</h2>
     <table>
-        <tr><th>Target Application</th><td>https://www.saucedemo.com</td></tr>
+        <tr><th>Target Application</th><td>{escape(target_url)}</td></tr>
         <tr><th>User Role Tested</th><td>{username}</td></tr>
-        <tr><th>Pages Analysed</th><td>{len(set(f['page_url'] for f in findings))}</td></tr>
+        <tr><th>Pages Analysed</th><td>{len(set(page['url'] for page in pages))}</td></tr>
         <tr><th>Total Issues</th><td>{len(findings)} ({len(critical)} critical, {len(major)} major, {len(minor)} minor)</td></tr>
         <tr><th>Run ID</th><td>{run_id}</td></tr>
     </table>
@@ -91,7 +92,7 @@ def generate_html(findings, report_content, run_id, username, pages):
 </body>
 </html>"""
 
-    html_path = OUTPUTS_DIR / f"report_{run_id}_{username}.html"
+    html_path = OUTPUTS_DIR / f"report_{run_id}.html"
     with open(html_path, "w", encoding="utf-8") as file:
         file.write(html)
 

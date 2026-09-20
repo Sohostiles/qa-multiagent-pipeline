@@ -16,6 +16,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 # Call the chat API with automatic retry on rate limits
 # Waits and retries instead of crashing when the per minute token limit is hit
 def chat_with_retry(max_retries=5, **kwargs):
+    kwargs = _normalise(kwargs)
     for attempt in range(max_retries):
         try:
             return client.chat.completions.create(**kwargs)
@@ -38,6 +39,23 @@ SCREENSHOTS_DIR.mkdir(exist_ok=True)
 DOM_DIR.mkdir(exist_ok=True)
 OUTPUTS_DIR.mkdir(exist_ok=True)
 
-#Model
-MODEL = "gpt-4o"
+MODEL = "gpt-4o-mini"
+
+# Increase the token limit to leave room for reasoning and the response.
+NEW_PARAM_MODELS = ("gpt-5",)
+
+
+def _normalise(kwargs):
+    model = kwargs.get("model", "")
+
+    for prefix in NEW_PARAM_MODELS:
+        if model.startswith(prefix):
+            if "max_tokens" in kwargs:
+                token_limit = kwargs.pop("max_tokens")
+                kwargs["max_completion_tokens"] = max(token_limit * 4, 1000)
+
+            kwargs.pop("temperature", None)
+            break
+
+    return kwargs
 
