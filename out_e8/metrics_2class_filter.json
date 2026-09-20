@@ -1,0 +1,200 @@
+{
+  "mode": "2class_filter",
+  "seed": 42,
+  "n_total": 348,
+  "n_train": 271,
+  "n_test": 77,
+  "excluded": {},
+  "label_distribution": {
+    "not_a_bug": 30,
+    "high": 177,
+    "low": 141
+  },
+  "n_groups": 130,
+  "baseline_majority": {
+    "accuracy": 0.5584,
+    "macro_f1": 0.2389,
+    "report": {
+      "not_a_bug": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 6.0
+      },
+      "low": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 28.0
+      },
+      "high": {
+        "precision": 0.5584415584415584,
+        "recall": 1.0,
+        "f1-score": 0.7166666666666667,
+        "support": 43.0
+      },
+      "accuracy": 0.5584415584415584,
+      "macro avg": {
+        "precision": 0.18614718614718614,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.2388888888888889,
+        "support": 77.0
+      },
+      "weighted avg": {
+        "precision": 0.31185697419463654,
+        "recall": 0.5584415584415584,
+        "f1-score": 0.4002164502164502,
+        "support": 77.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        0,
+        0,
+        6
+      ],
+      [
+        0,
+        0,
+        28
+      ],
+      [
+        0,
+        0,
+        43
+      ]
+    ],
+    "classes": [
+      "not_a_bug",
+      "low",
+      "high"
+    ]
+  },
+  "baseline_llm": {
+    "accuracy": 0.7143,
+    "macro_f1": 0.4851,
+    "report": {
+      "not_a_bug": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 6.0
+      },
+      "low": {
+        "precision": 0.6333333333333333,
+        "recall": 0.6785714285714286,
+        "f1-score": 0.6551724137931034,
+        "support": 28.0
+      },
+      "high": {
+        "precision": 0.7659574468085106,
+        "recall": 0.8372093023255814,
+        "f1-score": 0.8,
+        "support": 43.0
+      },
+      "accuracy": 0.7142857142857143,
+      "macro avg": {
+        "precision": 0.46643026004728133,
+        "recall": 0.5052602436323367,
+        "f1-score": 0.4850574712643678,
+        "support": 77.0
+      },
+      "weighted avg": {
+        "precision": 0.6580455005986922,
+        "recall": 0.7142857142857143,
+        "f1-score": 0.6849977608598298,
+        "support": 77.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        0,
+        4,
+        2
+      ],
+      [
+        0,
+        19,
+        9
+      ],
+      [
+        0,
+        7,
+        36
+      ]
+    ],
+    "classes": [
+      "not_a_bug",
+      "low",
+      "high"
+    ]
+  },
+  "distilbert": {
+    "accuracy": 0.5844,
+    "macro_f1": 0.4713,
+    "report": {
+      "not_a_bug": {
+        "precision": 0.2,
+        "recall": 0.16666666666666666,
+        "f1-score": 0.18181818181818182,
+        "support": 6.0
+      },
+      "low": {
+        "precision": 0.5384615384615384,
+        "recall": 0.75,
+        "f1-score": 0.6268656716417911,
+        "support": 28.0
+      },
+      "high": {
+        "precision": 0.696969696969697,
+        "recall": 0.5348837209302325,
+        "f1-score": 0.6052631578947368,
+        "support": 43.0
+      },
+      "accuracy": 0.5844155844155844,
+      "macro avg": {
+        "precision": 0.4784770784770785,
+        "recall": 0.48385012919896636,
+        "f1-score": 0.47131567045156997,
+        "support": 77.0
+      },
+      "weighted avg": {
+        "precision": 0.6006054551509098,
+        "recall": 0.5844155844155844,
+        "f1-score": 0.5801229050175705,
+        "support": 77.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        1,
+        1,
+        4
+      ],
+      [
+        1,
+        21,
+        6
+      ],
+      [
+        3,
+        17,
+        23
+      ]
+    ],
+    "classes": [
+      "not_a_bug",
+      "low",
+      "high"
+    ]
+  },
+  "false_positive_filter": {
+    "not_a_bug_precision": 0.2,
+    "not_a_bug_recall": 0.1667,
+    "not_a_bug_f1": 0.1818,
+    "pipeline_fp_rate_before": 0.0779,
+    "pipeline_fp_rate_after": 0.0694,
+    "findings_suppressed": 5,
+    "findings_kept": 72
+  }
+}

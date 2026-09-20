@@ -171,3 +171,6 @@ screenshots/
 dom/
 *.db
 IMPLEMENTATION_LOG.md
+
+# Trained model weights
+*.safetensors

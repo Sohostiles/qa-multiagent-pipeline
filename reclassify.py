@@ -112,7 +112,7 @@ def agreement(column, run_ids):
     scored = [
         (predicted, label)
         for predicted, label in pairs
-        if label in ("critical", "major", "minor")
+        if label in ("critical", "major", "minor", "not_a_bug")
     ]
 
     if not scored:
@@ -132,7 +132,7 @@ def agreement(column, run_ids):
 
     per_class = {}
 
-    for severity in ("critical", "major", "minor"):
+    for severity in ("critical", "major", "minor", "not_a_bug"):
         predicted = [
             (p, label)
             for p, label in scored

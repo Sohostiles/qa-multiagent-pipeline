@@ -1,0 +1,20 @@
+
+BEFORE - severity from analysis agents (n=348, not_a_bug excluded: 0)
+  3-class agreement: 234/348 = 67%
+  2-class agreement (high/low): 81%
+  class      predicted  actual  correct   prec  recall
+  critical          19      13        1     5%      8%
+  major            175     164      124    71%     76%
+  minor            153     141      109    71%     77%
+  not_a_bug          0      30        0     0%      0%
+
+AFTER - severity from Classifier Agent (n=348, not_a_bug excluded: 0)
+  3-class agreement: 258/348 = 74%
+  2-class agreement (high/low): 79%
+  class      predicted  actual  correct   prec  recall
+  critical          13      13        9    69%     69%
+  major            150     164      117    78%     71%
+  minor            160     141      114    71%     81%
+  not_a_bug         25      30       18    72%     60%
+
+Change: +7 points (3-class), -1 points (2-class)
