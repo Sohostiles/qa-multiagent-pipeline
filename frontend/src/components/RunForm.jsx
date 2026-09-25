@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { createRun } from '../api/runs'
 
 // Collect the target and optional login details
 function RunForm() {
   const [url, setUrl] = useState('')
   const [useLogin, setUseLogin] = useState(false)
+  const navigate = useNavigate()
 
   const [login, setLogin] = useState({
     url: '',
@@ -19,7 +21,6 @@ function RunForm() {
   // Track the request to start a test
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [createdRun, setCreatedRun] = useState(null)
 
   // Update one login field and keep the other values
   function updateLogin(event) {
@@ -39,7 +40,6 @@ async function startRun(event) {
 
   setSubmitting(true)
   setError('')
-  setCreatedRun(null)
 
   try {
     const details = {
@@ -58,13 +58,15 @@ async function startRun(event) {
     }
 
     const result = await createRun(details)
-    setCreatedRun(result.run_id)
 
-    // Clear the password after the request is accepted
+    // Clear the password once the test is accepted
     setLogin((previous) => ({
       ...previous,
       password: '',
     }))
+
+    // Open the new run
+    navigate(`/runs/${result.run_id}`)
   } catch (err) {
     setError(err.message)
   } finally {
@@ -76,30 +78,37 @@ async function startRun(event) {
     <section aria-labelledby="new-run-heading">
       <h2 id="new-run-heading">New test run</h2>
 
-      <form onSubmit={startRun}>
-        <div>
-          <label htmlFor="target-url">Target URL</label>
-          <input
-            id="target-url"
-            type="url"
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            placeholder="https://example.com"
-            required
-          />
+      <form onSubmit={startRun} className="run-form">
+        <div className="run-form-row">
+          <div className="target-field">
+            <label htmlFor="target-url">URL</label>
+            <input
+              id="target-url"
+              type="url"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://example.com"
+              required
+            />
+          </div>
+
+          <button
+            type="button"
+            aria-expanded={useLogin}
+            aria-controls="login-settings"
+            onClick={() => setUseLogin(!useLogin)}
+          >
+            Options
+          </button>
+          
+          <button type="submit" disabled={submitting}>
+            {submitting ? 'Starting...' : 'Run test'}
+          </button>
+
         </div>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={useLogin}
-            onChange={(event) => setUseLogin(event.target.checked)}
-          />
-          Log in before testing
-        </label>
-
         {useLogin && (
-          <fieldset>
+          <fieldset id="login-settings" className="login-settings">
             <legend>Test user login</legend>
 
             <div>
@@ -207,18 +216,8 @@ async function startRun(event) {
           </fieldset>
         )}
 
-        <button type="submit" disabled={submitting}>
-            {submitting ? 'Starting...' : 'Run test'}
-        </button>
-
         {error && <p role="alert">{error}</p>}
 
-        {createdRun !== null && (
-        <p role="status">
-            Run {createdRun} accepted. The assessment will run in the background.
-        </p>
-        )}
-        
       </form>
     </section>
   )

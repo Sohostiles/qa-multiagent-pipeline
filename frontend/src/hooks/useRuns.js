@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react'
 
-// Load the saved test runs
-function useRuns() {
+// Load saved runs when we open History or Projects
+function useRuns(pathname) {
   const [runs, setRuns] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (pathname !== '/history' && pathname !== '/projects') return
+
     let ignore = false
 
     async function loadRuns() {
+      setLoading(true)
+      setError('')
+
       try {
         const response = await fetch('/api/runs')
 
@@ -35,11 +40,11 @@ function useRuns() {
 
     loadRuns()
 
-    // Ignore the response if the component has been removed
+    // Ignore old responses after leaving the page
     return () => {
       ignore = true
     }
-  }, [])
+  }, [pathname])
 
   return { runs, loading, error }
 }

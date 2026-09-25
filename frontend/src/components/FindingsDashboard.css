@@ -1,72 +1,188 @@
-/* Show severity groups side by side */
+/* Page filter above the columns */
+label[for="page-filter"] {
+  display: inline-block;
+  margin-right: 8px;
+  font-weight: 550;
+}
+
+#page-filter {
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+
+/* Three severity groups */
 .findings-dashboard {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-  text-align: left;
+  gap: 24px;
+  align-items: start;
 }
 
 .findings-column {
   min-width: 0;
-  padding: 16px;
-  border: 1px solid #d1d5db;
-  border-top: 4px solid;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #f8fafc;
-  color: #1f2937;
+  background: #eaeaf0;
+  overflow: hidden;
 }
 
-/* Severity colours from the dashboard design */
 .findings-column--critical {
-  border-top-color: #b91c1c;
+  --severity-color: #c62828;
+  --severity-text: #fff;
 }
 
 .findings-column--major {
-  border-top-color: #c2410c;
+  --severity-color: #ff8a24;
+  --severity-text: #3b2100;
 }
 
 .findings-column--minor {
-  border-top-color: #eab308;
+  --severity-color: #ffdf57;
+  --severity-text: #433500;
 }
 
 .findings-column-title {
-  margin: 0 0 16px;
-  font-size: 1rem;
-  text-transform: capitalize;
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--severity-color);
+  color: var(--severity-text);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.findings-column > p {
+  margin: 0;
+  padding: 20px 16px;
+  color: var(--muted);
 }
 
 .findings-list {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 16px;
   list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
+/* Individual findings */
 .finding-card {
-  margin-bottom: 12px;
-  padding: 14px;
-  border: 1px solid #d1d5db;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--severity-color);
   border-radius: 6px;
-  background: #ffffff;
+  background: #fff;
+  overflow: hidden;
 }
 
-.finding-card:last-child {
-  margin-bottom: 0;
-}
-
-.finding-card p {
-  margin: 0;
-  overflow-wrap: anywhere;
+.finding-description {
+  margin: 0 0 12px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .finding-card .finding-page {
-  margin-top: 10px;
-  font-size: 0.85rem;
-  color: #475569;
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
-/* Stack the groups on smaller screens */
-@media (max-width: 800px) {
+/* A short preview of the suggested fix */
+.finding-fix {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 4px;
+  background: #e6f3ff;
+  color: #25435c;
+  font-size: 13px;
+}
+
+.finding-fix strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.finding-fix p {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+/* Finding number and link to its details */
+.finding-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.finding-card-footer span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.finding-card-footer button {
+  padding: 8px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+/* Stack columns when there isn't enough room */
+@media (max-width: 900px) {
   .findings-dashboard {
     grid-template-columns: 1fr;
   }
+}
+
+/* Keep the previews the same size */
+.finding-preview {
+  height: 180px;
+  background: #f1f1f5;
+  border-bottom: 1px solid var(--border);
+}
+
+.finding-preview > p {
+  height: 100%;
+  margin: 0;
+  padding: 16px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.finding-preview figure {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.finding-preview img {
+  display: block;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.finding-preview figcaption {
+  padding: 4px 12px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.finding-card-content {
+  padding: 16px;
 }

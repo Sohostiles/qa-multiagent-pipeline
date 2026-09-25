@@ -1,0 +1,22 @@
+* 193decb (HEAD -> main, origin/main, origin/HEAD) Save evaluation results, reports, and database snapshot
+* 798aca2 Add modular QA dashboard and background test submission
+* e0bdd0d Add FastAPI endpoints and initial React browser
+* 2b4438c Working separate classifier and some evaluation
+* b22038e evaluation tooling, interaction-effect detection, and finding consolidation
+* 6b0836d added backup for the run
+* 82ecbf7  add rate-limit retry, Reason dedup, and per-state/transition split
+* 38704ea integrate agents in orchestrator with merged findings and trace storage
+* 85f92f5 feat: add Reason Agent with per-state and before/after analysis
+* ddd2fd1 improve Vision Agent precision, DOM context, and interaction awareness
+* 42c50bd Fixed test comments
+* 83236e8 feat: add LLM-guided interaction scenarios to crawler
+* df8b699 feat: replace hardcoded crawl path with generic Playwright crawler 
+* 96bf80a qa-demo changes
+* b35e4e1 Adjusted some comments
+* 9724284 Adjusted some comments
+* 8029e75 Adjusted demo to include more reliable groundtruth
+* 0fc3753 Add modular pipeline architecture: crawl, vision, report agents, orchestrator, db layer, html renderer, and qa_demo notebook with ground truth evaluation
+* da3e905 Add Working Pipeline Vision and Report Agents
+* 53c0b97 Add Cell 1-3: config, database, crawl agent
+* 3f9f06a Initial project setup
+* 83321b8 Initial commit

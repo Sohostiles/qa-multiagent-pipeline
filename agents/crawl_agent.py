@@ -1,45 +1,62 @@
 # Crawl Agent
-# Generic Playwright crawler
-# Discovers pages at runtime instead of following a hardcoded path
-# Queue of links to visit, with depth and page limits
+# Find pages, save screenshots and DOM, and try interactions
+# Uses a queue to follow links up to the page and depth limits
 
 import json
 import asyncio
 import re
-from playwright.async_api import async_playwright
-from config import SCREENSHOTS_DIR, DOM_DIR, client, MODEL, chat_with_retry
 from urllib.parse import urlparse, urljoin
 
-# Buttons whose text matches these are never clicked
+from playwright.async_api import async_playwright
+from config import SCREENSHOTS_DIR, DOM_DIR, client, MODEL, chat_with_retry
+
+
+# Hide controls with these words from the model's element list
 DESTRUCTIVE_KEYWORDS = [
     "logout", "log out", "sign out", "signout",
     "remove", "delete", "reset", "clear",
     "buy", "purchase", "pay", "order",
 ]
 
-# Default crawl bounds
 DEFAULT_MAX_PAGES = 30
 DEFAULT_MAX_DEPTH = 5
 
+CREDENTIALS = {
+    "username", "user-name", "user_name", "password",
+    "pass", "email", "login", "pwd", "signing",
+    "signin", "emailme",
+}
 
-# Build a safe filename from a URL and index
+DEFAULT_ERROR_SELECTORS = (
+    "[data-test='error'], .error-message-container, [role='alert']"
+)
+
+
+class LoginFailed(Exception):
+    pass
+
+
+# Make a filename using the page path and capture number
 def _safe_name(url, index):
     path = urlparse(url).path.strip("/").replace("/", "_")
+
     if not path:
         path = "home"
+
     path = re.sub(r"\.[a-zA-Z0-9]+$", "", path)
     return f"{index}_{path}"[:80]
 
 
-# Capture screenshot and DOM for the current page state
+# Save the current screenshot and HTML
 async def _capture(page, run_id, name):
     screenshot_path = str(SCREENSHOTS_DIR / f"{run_id}_{name}.png")
     await page.screenshot(path=screenshot_path, full_page=True)
 
     dom = await page.content()
     dom_path = str(DOM_DIR / f"{run_id}_{name}.html")
-    with open(dom_path, "w", encoding="utf-8") as fh:
-        fh.write(dom)
+
+    with open(dom_path, "w", encoding="utf-8") as file:
+        file.write(dom)
 
     return {
         "url": page.url,
@@ -49,121 +66,137 @@ async def _capture(page, run_id, name):
     }
 
 
-# True if text matches a destructive keyword
+# Check whether the text contains a blocked word
 def _is_destructive(text):
-    t = (text or "").lower()
-    return any(word in t for word in DESTRUCTIVE_KEYWORDS)
+    text = (text or "").lower()
+    return any(word in text for word in DESTRUCTIVE_KEYWORDS)
 
 
-# Collect same domain, unseen link URLs on the current page
+# Find links on the same domain that haven't been queued or visited
 async def _discover_links(page, base_domain, visited, queued):
     new_links = []
     anchors = await page.query_selector_all("a[href]")
-    for a in anchors:
-        href = await a.get_attribute("href")
+
+    for anchor in anchors:
+        href = await anchor.get_attribute("href")
+
         if not href:
             continue
-        # Skip non navigational hrefs like "#", "javascript:", "mailto:", "tel:"
+
+        # Ignore links that don't lead to another page
         if href.startswith(("#", "javascript:", "mailto:", "tel:")):
             continue
-        # Resolve relative URLs against the current page
-        abs_url = await page.evaluate("(h) => new URL(h, location.href).href", href)
-        if urlparse(abs_url).netloc != base_domain:
+
+        full_url = await page.evaluate(
+            "(h) => new URL(h, location.href).href",
+            href,
+        )
+
+        if urlparse(full_url).netloc != base_domain:
             continue
-        if abs_url in visited or abs_url in queued:
+
+        if full_url in visited or full_url in queued:
             continue
-        new_links.append(abs_url)
+
+        new_links.append(full_url)
+
     return new_links
 
 
-# Discover JS only navigation targets that expose a stable identifier
-# SauceDemo tiles carry data-test="item-N-title-link" but no href
-# We click each by its own selector, so state drift cannot misalign them
-async def _discover_by_clicking(page, current_url, base_domain, visited, queued):
+# Find product pages opened through JavaScript rather than href links
+# This selector covers the title links used by SauceDemo
+async def _discover_by_clicking(
+    page, current_url, base_domain, visited, queued
+):
     found = []
-
-    # Read all stable target selectors from one page snapshot
-    handles = await page.query_selector_all("[data-test$='-title-link']")
     selectors = []
-    for h in handles:
-        dt = await h.get_attribute("data-test")
-        if dt:
-            selectors.append(f"[data-test='{dt}']")
 
-    # Visit each target by its own selector, reloading fresh each time
-    for sel in selectors:
+    elements = await page.query_selector_all("[data-test$='-title-link']")
+
+    # Save selectors before clicking anything
+    for element in elements:
+        data_test = await element.get_attribute("data-test")
+
+        if data_test:
+            selectors.append(f"[data-test='{data_test}']")
+
+    for selector in selectors:
+        # Return to the starting page if the last click navigated away
         if page.url != current_url:
             await page.goto(current_url)
             await page.wait_for_load_state("networkidle")
 
-        el = await page.query_selector(sel)
-        if el is None:
+        element = await page.query_selector(selector)
+
+        if element is None:
             continue
 
-        before = page.url
+        before_url = page.url
+
         try:
-            await el.click(timeout=2000)
+            await element.click(timeout=2000)
             await page.wait_for_load_state("networkidle")
         except Exception:
             continue
 
-        after = page.url
-        if (after != before
-                and urlparse(after).netloc == base_domain
-                and after not in visited
-                and after not in queued
-                and after not in found):
-            found.append(after)
+        after_url = page.url
 
-    # Leave the browser on the crawl page for the caller
+        if (
+            after_url != before_url
+            and urlparse(after_url).netloc == base_domain
+            and after_url not in visited
+            and after_url not in queued
+            and after_url not in found
+        ):
+            found.append(after_url)
+
+    # Leave the browser back on the crawl page
     if page.url != current_url:
         await page.goto(current_url)
         await page.wait_for_load_state("networkidle")
 
-    # Sort by numeric id so item pages come back in order
+    # Keep product pages ordered by their numeric ID
     def _id_key(url):
-        m = re.search(r'id=(\d+)', url)
-        return int(m.group(1)) if m else -1
-    found = sorted(found, key=_id_key)
+        match = re.search(r"id=(\d+)", url)
+        return int(match.group(1)) if match else -1
 
-    return found
+    return sorted(found, key=_id_key)
 
 
-# List the interactive elements on the page for the LLM
-# Each element gets an index and a selector we can act on later
+# Collect controls the model can use
 async def _get_interactive_elements(page, max_elements=30):
     elements = []
     selector = "input, textarea, select, button, a[href], [role=button]"
     handles = await page.query_selector_all(selector)
 
-    for i, h in enumerate(handles):
-        if i >= max_elements:
+    for index, element in enumerate(handles):
+        if index >= max_elements:
             break
-        # Gather descriptive attributes, any may be None
-        tag = await h.evaluate("el => el.tagName.toLowerCase()")
-        el_type = await h.get_attribute("type")
-        name = await h.get_attribute("name")
-        placeholder = await h.get_attribute("placeholder")
-        data_test = await h.get_attribute("data-test")
-        text = (await h.inner_text() or "").strip()[:50]
-        aria = await h.get_attribute("aria-label")
 
-        # Prefer data-test, then name, then id
-        el_id = await h.get_attribute("id")
+        tag = await element.evaluate("el => el.tagName.toLowerCase()")
+        element_type = await element.get_attribute("type")
+        name = await element.get_attribute("name")
+        placeholder = await element.get_attribute("placeholder")
+        data_test = await element.get_attribute("data-test")
+        text = (await element.inner_text() or "").strip()[:50]
+        aria_label = await element.get_attribute("aria-label")
+        element_id = await element.get_attribute("id")
+
+        # Prefer data-test, then name, then ID
         if data_test:
             css = f"[data-test='{data_test}']"
         elif name:
             css = f"{tag}[name='{name}']"
-        elif el_id:
-            css = f"#{el_id}"
+        elif element_id:
+            css = f"#{element_id}"
         else:
             css = None
 
         elements.append({
-            "index": i,
+            "index": index,
             "tag": tag,
-            "type": el_type,
-            "name": name or aria or placeholder or text or data_test,
+            "type": element_type,
+            "name": name or aria_label or placeholder or text or data_test,
             "placeholder": placeholder,
             "text": text,
             "selector": css,
@@ -172,9 +205,7 @@ async def _get_interactive_elements(page, max_elements=30):
     return elements
 
 
-# Run a single decision against the page
-# decision looks like {"action": "click"/"fill", "selector": ..., "value": ...}
-# Returns (ok, message) so the trace can record what happened
+# Carry out one action and return its result for the trace
 async def _execute(page, decision):
     action = decision.get("action")
     selector = decision.get("selector")
@@ -185,70 +216,87 @@ async def _execute(page, decision):
     if not selector:
         return False, "no selector provided"
 
-    el = await page.query_selector(selector)
-    if el is None:
+    element = await page.query_selector(selector)
+
+    if element is None:
         return False, f"element not found: {selector}"
-    
+
     try:
         if action == "fill":
             value = decision.get("value", "")
-            await el.fill(value)
+            await element.fill(value)
             return True, f"filled {selector} with {value!r}"
 
         elif action == "click":
-            await el.click(timeout=3000)
+            await element.click(timeout=3000)
             await page.wait_for_load_state("networkidle")
             return True, f"clicked {selector}"
 
         elif action == "select":
             value = decision.get("value", "")
-            await el.select_option(label=value)
+            await element.select_option(label=value)
             return True, f"selected {value!r} in {selector}"
 
         else:
             return False, f"unknown action: {action}"
 
-    except Exception as e:
-        return False, f"action failed on {selector}: {e}"
+    except Exception as error:
+        return False, f"action failed on {selector}: {error}"
 
-CREDENTIALS = {"username", "user-name", "user_name", "password", "pass", "email", "login", "pwd", "signing", "signin", "emailme"}
 
+# Check whether a control looks like a login field
 def _is_credential_field(element):
     text = " ".join(
-        str(element.get(k, ""))
-        for k in ["name", "placeholder", "text", "selector", "type"]
+        str(element.get(key, ""))
+        for key in ["name", "placeholder", "text", "selector", "type"]
     ).lower()
+
     if element.get("type") == "password":
         return True
+
     return any(term in text for term in CREDENTIALS)
 
-# Drop elements the LLM must never pick, like logout or reset
+
+# Remove blocked controls before sending the list to the model
 def _filter_safe_elements(elements, block_credentials=False):
-    safe = []
-    for e in elements:
-        label = f"{e.get('name','')} {e.get('text','')}".lower()
+    safe_elements = []
+
+    for element in elements:
+        label = (
+            f"{element.get('name', '')} {element.get('text', '')}"
+        ).lower()
+
         if _is_destructive(label):
             continue
-        if block_credentials and _is_credential_field(e):
-            continue
-        if e.get("selector") is None:
-            continue
-        safe.append(e)
-    return safe
 
-# Ask the LLM for the next step
-# It acts as a QA tester, infers a goal for the page, and drives toward bugs
+        if block_credentials and _is_credential_field(element):
+            continue
+
+        if element.get("selector") is None:
+            continue
+
+        safe_elements.append(element)
+
+    return safe_elements
+
+
+# Ask the model which action to try next
 async def decide_next_action(page_url, elements, history):
-    safe = _filter_safe_elements(elements, block_credentials=True)
-
-    # Compact element list for the prompt
-    element_lines = "\n".join(
-        f"{e['index']}: <{e['tag']}> {e.get('name','')!r} selector={e['selector']}"
-        for e in safe
+    safe_elements = _filter_safe_elements(
+        elements,
+        block_credentials=True,
     )
+
+    element_lines = "\n".join(
+        f"{element['index']}: <{element['tag']}> "
+        f"{element.get('name', '')!r} selector={element['selector']}"
+        for element in safe_elements
+    )
+
     history_lines = "\n".join(
-        f"- {h['action']} {h.get('selector','')} {h.get('value','')} => {h.get('result','')}"
-        for h in history
+        f"- {step['action']} {step.get('selector', '')} "
+        f"{step.get('value', '')} => {step.get('result', '')}"
+        for step in history
     ) or "(nothing yet)"
 
     system = """You are a QA test engineer interacting with a live web page to
@@ -267,6 +315,7 @@ Rules:
 - After an action that should change the page, prefer verifying the result over repeating similar actions.
 - Return {"action": "done"} when the goal is reached or no useful action remains.
 - Prefer completing a realistic user flow before declaring done."""
+
     user = f"""Page: {page_url}
 
 Available elements:
@@ -279,240 +328,323 @@ What is the single next action?"""
 
     response = chat_with_retry(
         model=MODEL,
-        messages=[{"role": "system", "content": system},
-                  {"role": "user", "content": user}],
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
         temperature=0,
         max_tokens=200,
     )
 
     raw = response.choices[0].message.content.strip()
+
+    # Remove Markdown fences if the model included them
     if raw.startswith("```"):
         raw = raw.split("```")[1]
+
         if raw.startswith("json"):
             raw = raw[4:]
+
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        return {"action": "done", "reason": "could not parse LLM response"}
+        return {
+            "action": "done",
+            "reason": "could not parse LLM response",
+        }
 
 
-# True if a page has form fields, not just navigation buttons
+# Only start a scenario if the page has input controls
 def _is_interactive_page(elements):
-    for e in elements:
-        if e.get("tag") in ("input", "textarea", "select"):
+    for element in elements:
+        if element.get("tag") in ("input", "textarea", "select"):
             return True
+
     return False
 
 
-# Run one LLM guided interaction scenario on the current page
-# Loop: read elements, LLM decides, execute, capture the new state, record trace
-# Returns (captured_pages, trace)
+# Try actions, capture changed states and record what happened
+# Returns captures, trace steps and possible no-change findings
 async def run_scenario(page, run_id, base_name, max_steps=12):
     captured_pages = []
     trace = []
     no_change_findings = []
-    last_dom = await page.content()   # baseline before any action
+
+    last_dom = await page.content()
 
     for step in range(max_steps):
         elements = await _get_interactive_elements(page)
         decision = await decide_next_action(page.url, elements, trace)
-        print(f"    [scenario] step {step+1}: {decision.get('action')} "
-              f"{decision.get('selector','')} {decision.get('reason','')}")
+
+        print(
+            f"    [scenario] step {step + 1}: {decision.get('action')} "
+            f"{decision.get('selector', '')} {decision.get('reason', '')}"
+        )
 
         if decision.get("action") == "done":
             break
 
-        ok, msg = await _execute(page, decision)
-
-        # Capture only if the DOM meaningfully changed since the last capture
+        ok, message = await _execute(page, decision)
         new_dom = await page.content()
+
+        # Save another capture if the HTML changed
         if new_dom != last_dom:
-            capture = await _capture(page, run_id, f"{base_name}_step{step+1}")
+            capture = await _capture(
+                page,
+                run_id,
+                f"{base_name}_step{step + 1}",
+            )
+
             capture["interaction"] = True
             capture["step"] = step + 1
-            capture["action"] = f"{decision.get('action')} {decision.get('selector','')} {decision.get('value','')}".strip()
+            capture["action"] = (
+                f"{decision.get('action')} "
+                f"{decision.get('selector', '')} "
+                f"{decision.get('value', '')}"
+            ).strip()
             capture["action_reason"] = decision.get("reason", "")
-            capture["dom_before"] = last_dom   # the DOM as it was before this action
+            capture["dom_before"] = last_dom
+
             captured_pages.append(capture)
             last_dom = new_dom
+
         else:
-            # No DOM change for actions that SHOULD cause a change (clicking a
-            # button/link, selecting an option), no change is itself a defect
-            # signal, the control did nothing.
+            # An unchanged DOM is treated as a possible defect signal
             action = decision.get("action")
             value = decision.get("value", "")
+
             expected_change = (
                 action == "click"
                 or action == "select"
                 or (action == "fill" and value != "")
             )
+
             if expected_change:
                 no_change_findings.append({
                     "page_url": page.url,
                     "issue_type": "functional",
                     "description": (
                         f"Interaction had no effect: '{action}' on "
-                        f"{decision.get('selector','')} produced no change in the page, "
-                        f"though a change was expected. Intent: {decision.get('reason','')}"
+                        f"{decision.get('selector', '')} produced no change "
+                        f"in the page, though a change was expected. "
+                        f"Intent: {decision.get('reason', '')}"
                     ),
                     "severity": "major",
                     "confidence": "medium",
                     "location": decision.get("selector", ""),
-                    "recommended_fix": "Ensure this control performs its intended action.",
+                    "recommended_fix": (
+                        "Ensure this control performs its intended action."
+                    ),
                     "source": "interaction_check",
                 })
-                print(f"      (no DOM change on {action}, recorded as potential defect)")
-            else:
-                print(f"      (no DOM change, expected, skipped)")
 
-        # Record the trace step for reproducibility
+                print(
+                    f"      (no DOM change on {action}, "
+                    "recorded as potential defect)"
+                )
+            else:
+                print("      (no DOM change, expected, skipped)")
+
+        # Keep the action and result for later analysis
         trace.append({
             "action": decision.get("action"),
             "selector": decision.get("selector"),
             "value": decision.get("value", ""),
             "reason": decision.get("reason", ""),
-            "result": msg,
+            "result": message,
             "url_after": page.url,
         })
 
         if not ok:
-            print(f"      (action failed: {msg})")
+            print(f"      (action failed: {message})")
 
-    print(f"    [scenario] complete, {len(captured_pages)} states captured, "
-          f"{len(trace)} steps")
+    print(
+        f"    [scenario] complete, {len(captured_pages)} states captured, "
+        f"{len(trace)} steps"
+    )
+
     return captured_pages, trace, no_change_findings
 
-class LoginFailed(Exception):
-    pass
 
-DEFAULT_ERROR_SELECTORS = "[data-test='error'], .error-message-container, [role='alert']"
-
-# Optional configurable login
+# Log in using the details provided by the user
 async def _login(page, login_config):
     login_url = login_config["url"]
+
     await page.goto(login_url)
-    await page.fill(login_config["username_selector"], login_config["username"])
-    await page.fill(login_config["password_selector"], login_config["password"])
+    await page.fill(
+        login_config["username_selector"],
+        login_config["username"],
+    )
+    await page.fill(
+        login_config["password_selector"],
+        login_config["password"],
+    )
     await page.click(login_config["submit_selector"])
     await page.wait_for_load_state("networkidle")
 
+    # Look for a login error message
     error_text = ""
-    selectors = login_config.get("error_selectors", DEFAULT_ERROR_SELECTORS)
+    selectors = login_config.get(
+        "error_selectors",
+        DEFAULT_ERROR_SELECTORS,
+    )
+
     try:
         element = await page.query_selector(selectors)
+
         if element:
             error_text = (await element.inner_text() or "").strip()
     except Exception:
         pass
 
+    expected_url = login_config.get("success_url")
 
-    expected = login_config.get("success_url")
-    if expected:
-        navigated = expected in page.url
+    if expected_url:
+        navigated = expected_url in page.url
     else:
         navigated = page.url.rstrip("/") != login_url.rstrip("/")
 
     if error_text or not navigated:
-        reason = error_text or f"did not navigate away from login page: {page.url}"
+        reason = (
+            error_text
+            or f"did not navigate away from login page: {page.url}"
+        )
         raise LoginFailed(f"Login failed: {reason}")
-    
+
     print(f"  Logged in as {login_config.get('username', '(unknown)')}")
 
-# Generic crawl, returns a list of page dicts
-# url is where to start crawling, post login for SauceDemo
-# login_config logs in first if provided
-# max_pages caps total pages, max_depth caps how far links are followed
-async def crawl(url, run_id, login_config=None, seed_paths=None,
-                max_pages=DEFAULT_MAX_PAGES, max_depth=DEFAULT_MAX_DEPTH):
 
+# Crawl the target and collect captures, traces and interaction findings
+# Login is optional and uses the same browser session
+# Scenario captures can take the total beyond max_pages
+async def crawl(
+    url,
+    run_id,
+    login_config=None,
+    seed_paths=None,
+    max_pages=DEFAULT_MAX_PAGES,
+    max_depth=DEFAULT_MAX_DEPTH,
+):
     print(f"Crawl Agent starting for {url}...")
+
     pages_crawled = []
     all_traces = []
     all_no_change = []
 
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=False)
         page = await browser.new_page()
 
-        # Log in first if credentials were provided
         if login_config:
             await _login(page, login_config)
 
-        # Open the target using the same browser session
+        # Open the target after login
         await page.goto(url)
         await page.wait_for_load_state("networkidle")
 
-        # Use the final URL in case the target redirects
+        # Use the final address if the target redirected
         start_url = page.url
         parsed_start = urlparse(start_url)
         base_domain = parsed_start.netloc
         origin = f"{parsed_start.scheme}://{parsed_start.netloc}"
 
-        # BFS queue of (url, depth), visited and queued are sets of URLs
         queue = [(start_url, 0)]
         queued = {start_url}
         visited = set()
         index = 0
 
-        # Seed the queue with known entry points, treated like discovered links
+        # Add any extra starting paths
         if seed_paths:
             for seed in seed_paths:
                 seed_url = urljoin(origin + "/", seed)
+
                 if seed_url not in queued:
                     queue.append((seed_url, 0))
                     queued.add(seed_url)
 
         while queue and len(pages_crawled) < max_pages:
             current_url, depth = queue.pop(0)
+
             if current_url in visited:
                 continue
 
-            # Navigate, the first item may already be loaded post login
             if page.url != current_url:
                 await page.goto(current_url)
                 await page.wait_for_load_state("networkidle")
+
             visited.add(current_url)
 
-            # Capture this page passively
+            # Capture the page before trying interactions
             index += 1
             name = _safe_name(current_url, index)
-            pages_crawled.append(await _capture(page, run_id, name))
-            print(f"  Captured [{len(pages_crawled)}/{max_pages}] depth={depth}: {current_url}")
 
-            # Interaction phase, run a scenario if the page has a form
+            pages_crawled.append(
+                await _capture(page, run_id, name)
+            )
+
+            print(
+                f"  Captured [{len(pages_crawled)}/{max_pages}] "
+                f"depth={depth}: {current_url}"
+            )
+
             elements = await _get_interactive_elements(page)
+
             if _is_interactive_page(elements):
-                print(f"    [scenario] interactive page detected: {current_url}")
-                scenario_pages, scenario_trace, scenario_nc = await run_scenario(page, run_id, name)
+                print(
+                    f"    [scenario] interactive page detected: {current_url}"
+                )
+
+                scenario_pages, scenario_trace, scenario_findings = (
+                    await run_scenario(page, run_id, name)
+                )
+
                 pages_crawled.extend(scenario_pages)
 
-                # Attach page and step context, then collect for storage
-                for i, t in enumerate(scenario_trace, 1):
-                    t["page_url"] = current_url
-                    t["step"] = i
-                    all_traces.append(t)
+                # Attach the starting page and step number to each trace
+                for step_number, trace_step in enumerate(scenario_trace, 1):
+                    trace_step["page_url"] = current_url
+                    trace_step["step"] = step_number
+                    all_traces.append(trace_step)
 
-                # Collect no-change interaction findings
-                all_no_change.extend(scenario_nc)
+                all_no_change.extend(scenario_findings)
 
-                # A scenario moves the browser around, return to the crawl page
+                # The scenario may have navigated to another page
                 if page.url != current_url:
                     await page.goto(current_url)
                     await page.wait_for_load_state("networkidle")
 
-            # Discover links and queue unseen same domain ones
             if depth < max_depth:
-                for link in await _discover_links(page, base_domain, visited, queued):
+                # Add normal links to the queue
+                links = await _discover_links(
+                    page,
+                    base_domain,
+                    visited,
+                    queued,
+                )
+
+                for link in links:
                     queue.append((link, depth + 1))
                     queued.add(link)
 
-                # JS only navigation, reach pages that have no href by clicking
-                for link in await _discover_by_clicking(page, current_url, base_domain, visited, queued):
+                # Also check title links opened through JavaScript
+                click_links = await _discover_by_clicking(
+                    page,
+                    current_url,
+                    base_domain,
+                    visited,
+                    queued,
+                )
+
+                for link in click_links:
                     queue.append((link, depth + 1))
                     queued.add(link)
 
         await browser.close()
 
-    print(f"Crawl Agent complete, {len(pages_crawled)} pages captured, "
-          f"{len(all_traces)} trace steps, {len(all_no_change)} no-change findings")
+    print(
+        f"Crawl Agent complete, {len(pages_crawled)} pages captured, "
+        f"{len(all_traces)} trace steps, "
+        f"{len(all_no_change)} no-change findings"
+    )
+
     return pages_crawled, all_traces, all_no_change
