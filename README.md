@@ -40,7 +40,7 @@ Open the local address printed by Vite. Its development proxy forwards `/api` re
 | `qa_pipeline.db` | Active database |
 | `screenshots/`, `dom/` | Captured screenshots and page HTML referenced by the application and stored runs. |
 | `outputs/` | Saved HTML and Markdown reports. |
-| `docs/` | Historical implementation log and project map |
+| `docs/` | Project map |
 | `backups/` | Historical database snapshots|
 | `experiments/classifier/` | Five saved DistilBERT experiment folders, including models, metrics, and charts. |
 | `classifier_out/` | Existing baseline metrics and the training script’s default output location |
