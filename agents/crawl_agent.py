@@ -8,7 +8,7 @@ import re
 from urllib.parse import urlparse, urljoin
 
 from playwright.async_api import async_playwright
-from config import SCREENSHOTS_DIR, DOM_DIR, client, MODEL, chat_with_retry
+from config import SCREENSHOTS_DIR, DOM_DIR, client, CRAWL_MODEL, chat_with_retry
 
 
 # Hide controls with these words from the model's element list
@@ -327,7 +327,7 @@ Actions so far:
 What is the single next action?"""
 
     response = chat_with_retry(
-        model=MODEL,
+        model=CRAWL_MODEL,
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},

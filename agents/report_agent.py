@@ -2,7 +2,7 @@
 
 import json
 
-from config import chat_with_retry, MODEL, OUTPUTS_DIR
+from config import chat_with_retry, REPORT_MODEL, OUTPUTS_DIR
 
 
 # Group findings that describe the same defect.
@@ -35,7 +35,7 @@ A unique finding should have its own group.
 Do not invent indices."""
 
     response = chat_with_retry(
-        model=MODEL,
+        model=REPORT_MODEL,
         messages=[
             {"role": "system", "content": system},
             {
@@ -151,7 +151,7 @@ def generate_markdown(findings, run_id, username, target_url):
 """
 
     response = chat_with_retry(
-        model=MODEL,
+        model=REPORT_MODEL,
         messages=[
             {
                 "role": "system",

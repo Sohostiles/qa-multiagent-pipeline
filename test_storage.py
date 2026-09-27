@@ -6,7 +6,6 @@
 
 import db
 
-
 # Fake pages, one passive and one interaction state
 FAKE_PAGES = [
     {

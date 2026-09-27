@@ -1,4 +1,5 @@
-* 193decb (HEAD -> main, origin/main, origin/HEAD) Save evaluation results, reports, and database snapshot
+* 04da33c (HEAD -> main, origin/main, origin/HEAD) Final Dashboard
+* 193decb Save evaluation results, reports, and database snapshot
 * 798aca2 Add modular QA dashboard and background test submission
 * e0bdd0d Add FastAPI endpoints and initial React browser
 * 2b4438c Working separate classifier and some evaluation

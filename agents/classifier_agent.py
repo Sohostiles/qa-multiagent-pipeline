@@ -7,7 +7,7 @@
 # The modular design also allows the classifier to be replaced without changing the analysis agents.
 
 import json
-from config import MODEL, chat_with_retry
+from config import chat_with_retry, CLASSIFIER_MODEL, OUTPUTS_DIR
 
 VALID_SEVERITIES = {"critical", "major", "minor", "not_a_bug"}
 # The same rubric was used when hand-labelling the traininng data
@@ -81,7 +81,7 @@ def _classify_batch(offset, batch):
     )
 
     response = chat_with_retry(
-        model=MODEL,
+        model=CLASSIFIER_MODEL,
         messages=[
             {"role": "system", "content": SYSTEM},
             {

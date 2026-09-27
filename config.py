@@ -39,7 +39,13 @@ SCREENSHOTS_DIR.mkdir(exist_ok=True)
 DOM_DIR.mkdir(exist_ok=True)
 OUTPUTS_DIR.mkdir(exist_ok=True)
 
-MODEL = "gpt-4o-mini"
+#MODEL = "gpt-4o-mini"
+
+CRAWL_MODEL = "gpt-4o"
+VISION_MODEL = "gpt-4o"
+REASON_MODEL = "gpt-4o"
+CLASSIFIER_MODEL = "gpt-4o"
+REPORT_MODEL = "gpt-4o-mini"
 
 # Increase the token limit to leave room for reasoning and the response.
 NEW_PARAM_MODELS = ("gpt-5",)

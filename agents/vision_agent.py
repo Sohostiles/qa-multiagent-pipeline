@@ -4,7 +4,7 @@ import re
 
 import base64
 import json
-from config import chat_with_retry, client, MODEL
+from config import chat_with_retry, client, VISION_MODEL
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
