@@ -27,7 +27,7 @@ source venv/bin/activate
 python -m uvicorn api:app --reload
 ```
 
-First tima activation:
+First time activation:
 
 ```
 python3 -m venv venv
