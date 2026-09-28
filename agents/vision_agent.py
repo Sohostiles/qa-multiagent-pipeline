@@ -43,7 +43,7 @@ def analyse(pages):
             interaction_note = ""
 
         response = chat_with_retry(
-            model=MODEL,
+            model=VISION_MODEL,
             messages=[
                 {
                     "role": "system",

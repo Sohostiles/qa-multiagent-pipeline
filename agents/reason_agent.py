@@ -3,7 +3,7 @@
 import re
 
 import json
-from config import client, MODEL, chat_with_retry
+from config import client, REASON_MODEL, chat_with_retry
 
 # Trim a raw DOM to structure and text, strip scripts and styles, cap length
 # Keep error and message regions even if they sit deep in the DOM
@@ -78,7 +78,7 @@ def analyse(pages):
         print(f"  Analysing: {page['url']}")
 
         response = chat_with_retry(
-            model=MODEL,
+            model=REASON_MODEL,
             messages=[
                 {
                     "role": "system",
@@ -178,7 +178,7 @@ def analyse_transitions(pages):
         print(f"  Comparing before and after: {page['url']} ({page.get('action','')})")
 
         response = chat_with_retry(
-            model=MODEL,
+            model=REASON_MODEL,
             messages=[
                 {
                     "role": "system",
