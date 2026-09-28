@@ -14,18 +14,32 @@ A Python pipeline and React dashboard for automated website QA. The crawler capt
 
 The current classifier is LLM-based. Saved DistilBERT models are retained as experiment evidence in `experiments/classifier/`.
 
+## Model configuration
+
+Each agent has a separate model setting in `config.py`. The current configuration uses GPT-4o for the Crawl, Vision, Reason and Classifier Agents, and GPT-4o-mini for the Report Agent. These settings allow models to be replaced independently. Historical evaluation results relate to the configurations described in the report.
+
 ## Starting the existing application
 
 Run commands from this project’s root. With the required dependencies available in the existing environment, start the API in one terminal:
 
-```sh
+```
 source venv/bin/activate
 python -m uvicorn api:app --reload
 ```
 
+First tima activation:
+
+```
+python3 -m venv venv
+source venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pip install fastapi uvicorn
+python -m playwright install chromium
+```
+
 Start the dashboard in a second terminal:
 
-```sh
+```
 cd frontend
 npm run dev
 ```
@@ -50,4 +64,4 @@ Open the local address printed by Vite. Its development proxy forwards `/api` re
 
 ## Notes
 
-The `test_*.py` files are manual checks. Some call AI services or websites, create captures, or write to the active database. The organization pass did not execute them.
+The `test_*.py` files are manual checks. Some call AI services or websites, create captures, or write to the active database. 
