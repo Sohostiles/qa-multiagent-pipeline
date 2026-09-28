@@ -174,3 +174,4 @@ IMPLEMENTATION_LOG.md
 
 # Trained model weights
 *.safetensors
+.DS_Store
